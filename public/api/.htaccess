@@ -1,0 +1,21 @@
+# Carpeta del envío de formularios. Solo enviar.php se abre desde la web; listas.php (generado en el build) lo
+# lee enviar.php desde el disco, no hace falta que sea accesible.
+<Files "listas.php">
+  Require all denied
+</Files>
+
+# salud.php es solo para el cron (línea de comandos): desde la web, bloqueado (y el propio script da 404)
+<Files "salud.php">
+  Require all denied
+</Files>
+
+# La respuesta del script nunca se guarda en caché (ni la del navegador ni la del servidor). La caché larga solo
+# la tiene dist/_astro/ (su propio .htaccess); los .php no entran en las reglas de caché del .htaccess raíz.
+<IfModule mod_headers.c>
+  <Files "enviar.php">
+    Header set Cache-Control "no-store, max-age=0"
+  </Files>
+</IfModule>
+
+# Sin listado de carpeta
+Options -Indexes

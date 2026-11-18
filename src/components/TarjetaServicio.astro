@@ -1,0 +1,54 @@
+---
+// Tarjeta de servicio: toda la tarjeta es un solo enlace, con el nombre como nombre accesible.
+// Filete de acento, número, nombre, texto y «Ver servicio →» abajo (mismo texto en todas).
+// Estilos comunes de tarjeta enlazada: .tarjeta-enlace en global.css.
+import Filete from './Filete.astro';
+import { idDe } from '../data/sitio';
+
+interface Props {
+  numero?: number;
+  nombre: string;
+  texto: string;
+  ruta: string;
+  nivel?: 'h2' | 'h3';
+}
+
+const { numero, nombre, texto, ruta, nivel = 'h3' } = Astro.props;
+const Titular = nivel;
+const idNombre = `servicio-${idDe(nombre)}`;
+---
+
+<a class="tarjeta-enlace tarjeta-servicio" href={ruta} aria-labelledby={idNombre}>
+  <Filete />
+  {numero !== undefined && <span class="tarjeta-servicio__numero" aria-hidden="true">{String(numero).padStart(2, '0')}</span>}
+  <Titular id={idNombre} class="tarjeta-servicio__nombre">{nombre}</Titular>
+  <p class="tarjeta-servicio__texto">{texto}</p>
+  <span class="tarjeta-enlace__ver" aria-hidden="true"
+    ><span class="tarjeta-enlace__ver-texto">Ver servicio</span>&nbsp;<span class="tarjeta-enlace__ver-flecha">→</span></span
+  >
+</a>
+
+<style>
+  .tarjeta-servicio {
+    gap: 14px;
+    padding: 32px;
+  }
+
+  .tarjeta-servicio__numero {
+    margin-top: 6px;
+    font-size: var(--texto-pequeno);
+    font-weight: var(--peso-medio);
+    letter-spacing: var(--interletraje-etiqueta);
+    color: var(--color-texto-3);
+  }
+
+  .tarjeta-servicio__nombre {
+    font-size: 1.375rem; /* 22 px */
+    letter-spacing: -0.01em;
+  }
+
+  .tarjeta-servicio__texto {
+    font-size: 1rem;
+    color: var(--color-texto-2);
+  }
+</style>

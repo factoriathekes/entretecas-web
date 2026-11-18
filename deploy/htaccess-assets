@@ -1,0 +1,5 @@
+# dist/_astro/: CSS, JS, fuentes e imágenes con hash en el nombre. Si cambian, cambia el nombre,
+# así que el navegador puede guardarlos un año sin preguntar.
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>

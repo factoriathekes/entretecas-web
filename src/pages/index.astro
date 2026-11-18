@@ -1,0 +1,349 @@
+---
+// Portada de entretecas.com. Textos: src/content/portada/portada.md (definitivos, de
+// diseno/entretecas-portada.html). Cifras y correo: src/data/sitio.json, vía rellenar().
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Seccion from '../components/Seccion.astro';
+import EncabezadoSeccion from '../components/EncabezadoSeccion.astro';
+import Etiqueta from '../components/Etiqueta.astro';
+import Boton from '../components/Boton.astro';
+import TarjetaServicio from '../components/TarjetaServicio.astro';
+import TarjetaPlan from '../components/TarjetaPlan.astro';
+import TarjetaCaso from '../components/TarjetaCaso.astro';
+import { organizacion } from '../data/datos-estructurados';
+import Cita from '../components/Cita.astro';
+import MesaTaller from '../components/MesaTaller.astro';
+import Filete from '../components/Filete.astro';
+import BloqueCTA from '../components/BloqueCTA.astro';
+import QuePasaDespues from '../components/QuePasaDespues.astro';
+import { sitio, rellenar } from '../data/sitio';
+
+const entrada = await getEntry('portada', 'portada');
+if (!entrada) throw new Error('Falta src/content/portada/portada.md');
+const { titulo, descripcion, hero, idiomas, servicios, planes, proceso, casos, sobreMi, contacto } = entrada.data;
+---
+
+<Base titulo={titulo} descripcion={descripcion} datos={[organizacion()]}>
+  <!-- Portada -->
+  <section class="contenedor hero" aria-labelledby="hero-titular">
+    <div class="hero__texto">
+      <Etiqueta>{hero.etiqueta}</Etiqueta>
+      <h1 id="hero-titular" class="hero__titular">{hero.titular}</h1>
+      <p class="entradilla">{hero.entradilla}</p>
+      <div class="hero__botones">
+        <Boton href={hero.botonPrincipal.ruta}>{hero.botonPrincipal.texto}</Boton>
+        <Boton href={hero.botonSecundario.ruta} variante="borde">{hero.botonSecundario.texto}</Boton>
+      </div>
+      <p class="hero__nota">{rellenar(hero.nota)}</p>
+    </div>
+    <div class="hero__grafico">
+      <MesaTaller />
+    </div>
+  </section>
+
+  <!-- Los dos idiomas -->
+  <Seccion fondo="blanco" etiquetadaPor="idiomas-titular">
+    <h2 id="idiomas-titular" class="idiomas__titular">{idiomas.titular}</h2>
+    <ul class="rejilla puntos" style="--min: 260px">
+      {
+        idiomas.puntos.map((punto) => (
+          <li>
+            <Filete />
+            <h3>{punto.titulo}</h3>
+            <p>{punto.texto}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </Seccion>
+
+  <!-- Servicios -->
+  <Seccion id="servicios" etiquetadaPor="servicios-titular">
+    <EncabezadoSeccion id="servicios-titular" etiqueta={servicios.etiqueta} titular={servicios.titular} />
+    <ul class="servicios" role="list">
+      {
+        servicios.tarjetas.map((tarjeta, i) => (
+          <li>
+            <TarjetaServicio numero={i + 1} {...tarjeta} />
+          </li>
+        ))
+      }
+      <li class="servicios__llamada fondo-marca">
+        <p class="servicios__llamada-texto">{servicios.llamada.texto}</p>
+        <Boton href={servicios.llamada.boton.ruta} variante="papel">{servicios.llamada.boton.texto}</Boton>
+      </li>
+    </ul>
+  </Seccion>
+
+  <!-- Planes gestionados -->
+  <Seccion id="planes" fondo="tinta" etiquetadaPor="planes-titular">
+    <EncabezadoSeccion id="planes-titular" etiqueta={planes.etiqueta} titular={planes.titular} />
+    <div class="rejilla" style="--min: 260px">
+      {planes.planes.map((plan) => <TarjetaPlan {...plan} />)}
+    </div>
+    <div class="planes__pie">
+      <p>{planes.nota}</p>
+      <Boton href={planes.boton.ruta} variante="papel">{planes.boton.texto}</Boton>
+    </div>
+  </Seccion>
+
+  <!-- Cómo trabajamos -->
+  <Seccion etiquetadaPor="proceso-titular">
+    <EncabezadoSeccion id="proceso-titular" etiqueta={proceso.etiqueta} titular={proceso.titular} />
+    <ol class="rejilla pasos" style="--min: 220px">
+      {
+        proceso.pasos.map((paso) => (
+          <li>
+            <Filete />
+            <h3>{paso.titulo}</h3>
+            <p>{paso.texto}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </Seccion>
+
+  <!-- Casos -->
+  <Seccion id="casos" fondo="blanco" etiquetadaPor="casos-titular">
+    <EncabezadoSeccion id="casos-titular" etiqueta={casos.etiqueta} titular={casos.titular} />
+    <ul class="rejilla casos" style="--min: 250px" role="list">
+      {
+        casos.casos.map((caso) => (
+          <li>
+            <TarjetaCaso {...caso} />
+          </li>
+        ))
+      }
+    </ul>
+    <Cita {...casos.cita} />
+  </Seccion>
+
+  <!-- Sobre mí -->
+  <Seccion id="sobre" etiquetadaPor="sobre-titular">
+    <div class="sobre">
+    <div class="sobre__foto" role="img" aria-label="Fotografía de Rai Alcázar (pendiente)">
+      <span aria-hidden="true">[Fotografía]</span>
+    </div>
+    <div class="sobre__texto">
+      <EncabezadoSeccion id="sobre-titular" etiqueta={sobreMi.etiqueta} titular={sobreMi.titular} />
+      {sobreMi.parrafos.map((parrafo) => <p>{rellenar(parrafo)}</p>)}
+    </div>
+    </div>
+  </Seccion>
+
+  <!-- Bloque final: diagnóstico (sin formulario) y «Qué pasa después» -->
+  <BloqueCTA id="diagnostico" titular={contacto.titular}>
+    <p>{rellenar(contacto.texto)}</p>
+    <p class="diagnostico__boton"><Boton href={contacto.boton.ruta}>{contacto.boton.texto}</Boton></p>
+    <QuePasaDespues slot="lateral" />
+  </BloqueCTA>
+</Base>
+
+<style is:global>
+  /* Desplazamiento suave a #diagnostico (botón «Pedir diagnóstico» del inicio); no con movimiento reducido */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+</style>
+
+<style>
+  .hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--espacio-5);
+    padding-block: clamp(56px, 2.5rem + 4vw, 88px) clamp(48px, 2rem + 3vw, 72px);
+  }
+
+  .hero__texto {
+    flex: 999 1 520px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+
+  .hero__titular {
+    font-size: clamp(2.375rem, 1.6rem + 3.2vw, 3.75rem); /* 38 → 60 px, como el diseño */
+    letter-spacing: -0.03em;
+    line-height: 1.06;
+  }
+
+  .hero__botones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 8px;
+  }
+
+  /* Mismo tamaño que el botón «Pedir diagnóstico» del inicio */
+  .hero__botones :global(.boton),
+  .diagnostico__boton :global(.boton) {
+    min-height: 56px;
+    padding-inline: 26px;
+  }
+
+  .hero__nota {
+    margin-top: 8px;
+    font-size: 0.9375rem;
+    color: var(--color-texto-3);
+  }
+
+  /* Animación: al lado del texto en escritorio; debajo en móvil. Cuadrada, 440 px como máximo */
+  .hero__grafico {
+    flex: 0 1 440px;
+    min-width: 0;
+  }
+
+  /* Servicios: 3 columnas en dos filas (5 servicios + tarjeta de llamada); 2 en tableta; 1 en móvil */
+  .servicios,
+  .casos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .servicios {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--espacio-3);
+  }
+
+  @media (min-width: 640px) {
+    .servicios {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .servicios {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .servicios__llamada {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 28px;
+    padding: 32px;
+    border-radius: var(--radio-tarjeta);
+  }
+
+  /* Texto en papel sobre color de marca: tamaño grande (≥ 24 px), basta 3:1 */
+  .servicios__llamada-texto {
+    font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.125rem); /* 26 → 34 px */
+    font-weight: var(--peso-negrita);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  .idiomas__titular {
+    font-size: clamp(1.75rem, 1.3rem + 1.9vw, 2.5rem);
+    line-height: 1.18;
+    max-width: 22em;
+  }
+
+  .puntos,
+  .pasos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .puntos {
+    gap: 32px;
+  }
+
+  .puntos li,
+  .pasos li {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .puntos h3,
+  .pasos h3 {
+    font-size: 1.25rem;
+  }
+
+  .puntos p,
+  .pasos p {
+    color: var(--color-texto-2);
+  }
+
+  .pasos {
+    counter-reset: paso;
+    gap: 28px;
+  }
+
+  .pasos li {
+    counter-increment: paso;
+  }
+
+  .puntos :global(.filete),
+  .pasos :global(.filete) {
+    margin-bottom: 8px;
+  }
+
+  .pasos h3::before {
+    content: counter(paso) '. ';
+  }
+
+  .pasos p {
+    font-size: 1rem;
+  }
+
+  .planes__pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .planes__pie p {
+    max-width: 42.5rem;
+    font-size: 1rem;
+    color: var(--color-texto-claro-2);
+  }
+
+  .sobre {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 48px;
+  }
+
+  .sobre__foto {
+    flex: 1 1 280px;
+    max-width: 380px;
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-linea);
+    border-radius: var(--radio-tarjeta);
+    color: var(--color-texto-3);
+    font-size: 0.9375rem;
+  }
+
+  .sobre__texto {
+    flex: 999 1 460px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .sobre__texto p {
+    font-size: 1.125rem;
+    line-height: 1.65;
+    color: var(--color-texto-2);
+  }
+</style>

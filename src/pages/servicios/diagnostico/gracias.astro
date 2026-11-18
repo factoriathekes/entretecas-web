@@ -1,0 +1,34 @@
+---
+// /servicios/diagnostico/gracias/: destino del envío correcto del formulario de diagnóstico
+// (public/api/enviar.php, 303). Sin indexar (noindex) y fuera del sitemap (astro.config.mjs).
+// Repite «Qué pasa después» (mismo componente y texto de sitio.json que la portada y el diagnóstico).
+import Base from '../../../layouts/Base.astro';
+import CabezaPagina from '../../../components/CabezaPagina.astro';
+import Seccion from '../../../components/Seccion.astro';
+import Boton from '../../../components/Boton.astro';
+import QuePasaDespues from '../../../components/QuePasaDespues.astro';
+import { sitio } from '../../../data/sitio';
+---
+
+<Base titulo={`Solicitud enviada · ${sitio.nombre}`} noindex>
+  <CabezaPagina
+    migas={[{ texto: 'Servicios', ruta: '/#servicios' }, { texto: 'Diagnóstico', ruta: '/servicios/diagnostico/' }, { texto: 'Solicitud enviada' }]}
+    etiqueta="Solicitud enviada"
+    h1="Gracias. He recibido tu solicitud."
+    entradilla={['Ya tengo los datos de tu biblioteca y lo que necesitas.']}
+  >
+    <Boton href="/">Volver a la portada</Boton>
+  </CabezaPagina>
+
+  <Seccion fondo="blanco">
+    <div class="gracias__despues">
+      <QuePasaDespues />
+    </div>
+  </Seccion>
+</Base>
+
+<style>
+  .gracias__despues {
+    max-width: 640px;
+  }
+</style>

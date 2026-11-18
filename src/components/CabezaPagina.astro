@@ -1,0 +1,101 @@
+---
+// Cabecera de las páginas interiores: migas, etiqueta, h1, entradilla y botón; a la derecha (debajo en
+// móvil), la ranura «lateral» (recuadro de precio, fotografía…).
+import Migas from './Migas.astro';
+import Etiqueta from './Etiqueta.astro';
+import { enLinea } from '../data/texto';
+
+interface Props {
+  migas: { texto: string; ruta?: string }[];
+  etiqueta?: string;
+  h1: string;
+  /** Lema: frase corta justo debajo del h1, en tinta y más grande que la entradilla (páginas de servicio) */
+  lema?: string;
+  entradilla?: string[];
+  /** En escritorio, la ranura lateral a la izquierda (la foto de «Sobre mí»); en el HTML y en móvil va detrás del texto */
+  lateralDelante?: boolean;
+}
+
+const { migas, etiqueta, h1, lema, entradilla = [], lateralDelante = false } = Astro.props;
+const hayLateral = Astro.slots.has('lateral');
+---
+
+<section class="contenedor cabeza" aria-labelledby="titular-pagina">
+  <Migas migas={migas} />
+  <div class:list={['cabeza__fila', { 'cabeza__fila--delante': lateralDelante }]}>
+    <div class="cabeza__texto">
+      {etiqueta && <Etiqueta>{etiqueta}</Etiqueta>}
+      <h1 id="titular-pagina" class="cabeza__titular">{h1}</h1>
+      {lema && <p class="cabeza__lema">{lema}</p>}
+      {entradilla.map((parrafo, i) => <p class:list={[i === 0 ? 'entradilla' : 'cabeza__parrafo']} set:html={enLinea(parrafo)} />)}
+      <slot />
+    </div>
+    {hayLateral && <div class="cabeza__lateral"><slot name="lateral" /></div>}
+  </div>
+</section>
+
+<style>
+  .cabeza {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-2);
+    padding-block: clamp(16px, 2vw, 28px) clamp(48px, 2rem + 3vw, 80px);
+  }
+
+  .cabeza__fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--espacio-5);
+  }
+
+  @media (min-width: 960px) {
+    .cabeza__fila--delante .cabeza__lateral {
+      order: -1;
+    }
+  }
+
+  .cabeza__texto {
+    flex: 999 1 560px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+  }
+
+  .cabeza__titular {
+    font-size: clamp(2.25rem, 1.5rem + 3vw, 3.5rem); /* 36 → 56 px */
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    max-width: 18em;
+  }
+
+  /* Lema: entre el cuerpo y el h1 (22 → 30 px), en tinta, unos 36 caracteres por línea */
+  .cabeza__lema {
+    max-width: 36ch;
+    margin-top: -6px;
+    font-size: clamp(1.375rem, 1.1rem + 1.2vw, 1.875rem);
+    font-weight: var(--peso-medio);
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: var(--color-tinta);
+    text-wrap: balance;
+  }
+
+  .cabeza__parrafo {
+    font-size: 1.125rem;
+    line-height: 1.65;
+    color: var(--color-texto-2);
+    max-width: 38em;
+  }
+
+  .cabeza__texto :global(.boton) {
+    margin-top: 6px;
+  }
+
+  .cabeza__lateral {
+    flex: 1 1 320px;
+    min-width: 0;
+  }
+</style>

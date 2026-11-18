@@ -1,0 +1,73 @@
+---
+// Bloque de llamada a la acción. Franja de color de marca solo con el titular grande en papel
+// (texto grande: basta 3:1); debajo, sobre papel y en tinta, el texto y lo que vaya en la ranura
+// «lateral» (un formulario, un botón…). Ningún texto pequeño sobre el color de marca.
+interface Props {
+  id?: string;
+  titular: string;
+}
+
+const { id, titular } = Astro.props;
+const idTitular = id ? `${id}-titular` : undefined;
+---
+
+<section id={id} class="cta" aria-labelledby={idTitular}>
+  <div class="fondo-marca cta__franja">
+    <div class="contenedor">
+      <h2 id={idTitular} class="cta__titular">{titular}</h2>
+    </div>
+  </div>
+  <div class="cta__cuerpo">
+    <div class="contenedor cta__rejilla">
+      <div class="cta__texto">
+        <slot />
+      </div>
+      {
+        Astro.slots.has('lateral') && (
+          <div class="cta__lateral">
+            <slot name="lateral" />
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    scroll-margin-top: calc(var(--alto-cabecera) + var(--espacio-2));
+  }
+
+  .cta__franja {
+    padding-block: clamp(40px, 2rem + 3vw, 64px);
+  }
+
+  .cta__titular {
+    font-size: clamp(1.875rem, 1.4rem + 2vw, 2.75rem); /* 30 → 44 px */
+    line-height: 1.1;
+    max-width: 22em;
+  }
+
+  .cta__rejilla {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espacio-5);
+    padding-block: clamp(40px, 2rem + 3vw, 72px);
+  }
+
+  .cta__texto {
+    flex: 1 1 300px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    font-size: 1.125rem;
+    color: var(--color-texto-2);
+  }
+
+  .cta__lateral {
+    flex: 999 1 460px;
+    max-width: 640px; /* el formulario: una columna de 640 px como máximo; el sobrante, para el texto */
+    min-width: 0;
+  }
+</style>

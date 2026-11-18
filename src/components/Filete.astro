@@ -1,0 +1,10 @@
+---
+// Filete de acento: 4 × 56 px en color de marca, encima del contenido (estilos: .filete en global.css).
+// Uno por tarjeta o bloque: es su único acento de color.
+interface Props {
+  class?: string;
+}
+const { class: clase } = Astro.props;
+---
+
+<span class:list={['filete', clase]} aria-hidden="true"></span>

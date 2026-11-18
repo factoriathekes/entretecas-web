@@ -1,0 +1,9 @@
+---
+// Etiqueta sobre un titular: texto en tinta (en papel sobre banda tinta) con un cuadrado en color de marca.
+interface Props {
+  class?: string;
+}
+const { class: clase } = Astro.props;
+---
+
+<p class:list={['etiqueta', clase]}><slot /></p>

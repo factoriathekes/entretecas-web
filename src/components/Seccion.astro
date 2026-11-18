@@ -1,0 +1,30 @@
+---
+// Sección a todo el ancho con su fondo y el contenido en el contenedor de 1200 px.
+// fondo: papel (por defecto), blanco (banda alterna con filetes), tinta o marca.
+interface Props {
+  id?: string;
+  fondo?: 'papel' | 'blanco' | 'tinta' | 'marca';
+  etiquetadaPor?: string;
+  class?: string;
+}
+
+const { id, fondo = 'papel', etiquetadaPor, class: clase } = Astro.props;
+---
+
+<section id={id} aria-labelledby={etiquetadaPor} class:list={['bloque', fondo !== 'papel' && `fondo-${fondo}`]}>
+  <div class:list={['contenedor', 'seccion', 'bloque__interior', clase]}>
+    <slot />
+  </div>
+</section>
+
+<style>
+  .bloque {
+    scroll-margin-top: calc(var(--alto-cabecera) + var(--espacio-2));
+  }
+
+  .bloque__interior {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-4);
+  }
+</style>

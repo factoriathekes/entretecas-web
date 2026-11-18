@@ -1,0 +1,62 @@
+---
+// Bloque negro «Qué pasa después»: único componente, con el texto de sitio.json (quePasaDespues).
+// Se usa solo en dos sitios: el bloque final de la portada (#diagnostico) y junto al formulario completo
+// de /servicios/diagnostico/ (#pedir).
+import { sitio } from '../data/sitio';
+import { enLinea } from '../data/texto';
+
+const { titular, pasos } = sitio.quePasaDespues;
+---
+
+<section class="despues fondo-tinta tarjeta" aria-labelledby="despues-titular">
+  <h2 id="despues-titular" class="despues__titular">{titular}</h2>
+  <ol class="despues__pasos">
+    {pasos.map((paso) => <li><span set:html={enLinea(paso)} /></li>)}
+  </ol>
+</section>
+
+<style>
+  .despues {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: clamp(28px, 4vw, 34px);
+  }
+
+  .despues__titular {
+    font-size: 1.375rem;
+  }
+
+  .despues__pasos {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: paso;
+  }
+
+  .despues__pasos li {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 10px;
+    counter-increment: paso;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--color-texto-claro);
+  }
+
+  /* Número en color de marca sobre tinta: 22 px en negrita, texto grande (3,9:1; basta 3:1) */
+  .despues__pasos li::before {
+    content: counter(paso);
+    font-size: 1.375rem;
+    font-weight: var(--peso-negrita);
+    line-height: 1.1;
+    color: var(--color-marca);
+  }
+
+  .despues__pasos :global(strong) {
+    color: var(--color-papel);
+  }
+</style>

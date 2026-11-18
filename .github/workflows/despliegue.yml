@@ -1,0 +1,124 @@
+# entretecas.com — build de Astro y publicación por FTPS en Raiola (sin SSH).
+# Se lanza SIEMPRE a mano: GitHub → Actions → despliegue → Run workflow.
+#   - entorno «staging»     → https://staging.entretecas.com (carpeta FTP_DIR_STAGING). Activo.
+#   - entorno «produccion»  → https://entretecas.com. PREPARADO PERO DESACTIVADO (job con «if: false»; ver abajo).
+# Secretos (nombres en deploy/secretos-github.example): FTP_SERVER, FTP_USERNAME, FTP_PASSWORD, FTP_DIR_STAGING
+# y, para producción, FTP_DIR_PRODUCCION.
+name: despliegue
+
+on:
+  workflow_dispatch:
+    inputs:
+      entorno:
+        description: Dónde publicar
+        type: choice
+        options: [staging, produccion]
+        default: staging
+
+# Nunca dos subidas a la vez al mismo entorno, ni cortar una a medias
+concurrency:
+  group: despliegue-${{ inputs.entorno }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  staging:
+    if: inputs.entorno == 'staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Comprobar secretos
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_DIR_STAGING: ${{ secrets.FTP_DIR_STAGING }}
+        run: |
+          for nombre in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_DIR_STAGING; do
+            if [ -z "${!nombre}" ]; then echo "::error::Falta el secreto $nombre"; exit 1; fi
+          done
+          case "$FTP_DIR_STAGING" in
+            */) ;;
+            *) echo "::error::FTP_DIR_STAGING tiene que terminar en /"; exit 1 ;;
+          esac
+
+      # Acciones fijadas al commit de su versión; el comentario dice cuál es
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      # .htaccess de staging (con X-Robots-Tag noindex, nofollow) y robots.txt con «Disallow: /».
+      # La contraseña de acceso (STAGING_AUTH_*) es opcional: si los tres secretos existen, se añade.
+      - name: Archivos de servidor de staging
+        env:
+          STAGING_AUTH_USER: ${{ secrets.STAGING_AUTH_USER }}
+          STAGING_AUTH_PASSWORD: ${{ secrets.STAGING_AUTH_PASSWORD }}
+          STAGING_HTPASSWD_PATH: ${{ secrets.STAGING_HTPASSWD_PATH }}
+        run: bash deploy/preparar.sh staging
+
+      # Sube solo lo cambiado y borra solo lo que ella subió y ya no está en dist/ (archivo de estado
+      # .ftp-deploy-sync-state.json dentro de la carpeta de destino): nunca toca nada fuera de FTP_DIR_STAGING
+      # ni lo que no subió ella. No usar dangerous-clean-slate.
+      - name: Subir dist/ por FTPS
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_DIR_STAGING }}
+          protocol: ftps
+          port: 21
+          security: strict
+          local-dir: dist/
+          log-level: standard
+
+  # PRODUCCIÓN — DESACTIVADO. Para activarlo (cuando Rai lo decida): crear el secreto FTP_DIR_PRODUCCION
+  # (terminado en /), quitar la línea «if: false» y dejar «if: inputs.entorno == 'produccion'».
+  produccion:
+    if: false && inputs.entorno == 'produccion'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Comprobar secretos
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_DIR_PRODUCCION: ${{ secrets.FTP_DIR_PRODUCCION }}
+        run: |
+          for nombre in FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_DIR_PRODUCCION; do
+            if [ -z "${!nombre}" ]; then echo "::error::Falta el secreto $nombre"; exit 1; fi
+          done
+          case "$FTP_DIR_PRODUCCION" in
+            */) ;;
+            *) echo "::error::FTP_DIR_PRODUCCION tiene que terminar en /"; exit 1 ;;
+          esac
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Archivos de servidor de producción
+        run: bash deploy/preparar.sh produccion
+      - name: Subir dist/ por FTPS
+        uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_DIR_PRODUCCION }}
+          protocol: ftps
+          port: 21
+          security: strict
+          local-dir: dist/
+          log-level: standard
+      - name: Recordatorio de la bitácora
+        run: echo "::warning title=Publicado en producción::Anota la publicación en bitacora-trabajo.md."

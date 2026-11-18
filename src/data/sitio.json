@@ -1,0 +1,49 @@
+{
+  "nombre": "Entretecas",
+  "url": "https://entretecas.com",
+  "descripcion": "Implanto, migro y mantengo el sistema de gestión de tu biblioteca o de tu archivo con software libre: PMB, Koha y AtoM.",
+  "correo": "rai@entretecas.com",
+  "titular": {
+    "razonSocial": "Factoría Thekes, SL",
+    "nombreComercial": "Factoría Thekes",
+    "cif": "B85847747",
+    "domicilio": "Encomienda, 25, 28590 Villarejo de Salvanés (Madrid)",
+    "correo": "correo@thekes.es",
+    "web": "https://thekes.es"
+  },
+  "precios": {
+    "diagnosticoDesde": 290
+  },
+  "plazos": {
+    "diagnostico": { "desde": 5, "hasta": 10, "unidad": "días laborables" },
+    "implantacion": { "desde": 2, "hasta": 4, "unidad": "semanas" },
+    "implantacionConMigracion": { "desde": 4, "hasta": 8, "unidad": "semanas" },
+    "respuestaContacto": { "desde": 3, "hasta": 3, "unidad": "días laborables" }
+  },
+  "permanenciaMeses": 12,
+  "cifras": {
+    "anos": 17,
+    "bibliotecas": 15
+  },
+  "menu": [
+    { "texto": "Servicios", "ruta": "/#servicios" },
+    { "texto": "Planes", "ruta": "/planes/" },
+    { "texto": "Casos", "ruta": "/casos/" },
+    { "texto": "Sobre mí", "ruta": "/sobre-mi/" },
+    { "texto": "Contacto", "ruta": "/contacto/" }
+  ],
+  "botonMenu": { "texto": "Pedir diagnóstico", "ruta": "/servicios/diagnostico/" },
+  "quePasaDespues": {
+    "titular": "Qué pasa después",
+    "pasos": [
+      "**Leo tu mensaje** y te respondo en {respuestaContacto} como máximo.",
+      "**Si encaja con lo que hago,** te propongo el diagnóstico con su precio y plazo.",
+      "**Si no encaja,** te lo digo y, si puedo, te oriento hacia quien te pueda ayudar."
+    ]
+  },
+  "legal": [
+    { "texto": "Aviso legal", "ruta": "/aviso-legal/" },
+    { "texto": "Privacidad", "ruta": "/privacidad/" },
+    { "texto": "Cookies", "ruta": "/cookies/" }
+  ]
+}

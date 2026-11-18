@@ -1,0 +1,6 @@
+# Staging: fuera de los buscadores en todas las respuestas (también errores y redirecciones).
+# Junto con robots.txt (Disallow: /) que genera deploy/preparar.sh. Sin analítica.
+<IfModule mod_headers.c>
+  Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+

@@ -1,0 +1,91 @@
+---
+// Lista de puntos con texto en línea (**negrita**, [enlace](/…/)).
+// tipo «cuadros»: viñeta cuadrada de 10 px en color de marca (como la etiqueta);
+// tipo «pasos»: lista numerada 01, 02… con el número en color de marca (30 px, texto grande) y líneas entre pasos.
+import { enLinea } from '../data/texto';
+
+interface Props {
+  puntos: string[];
+  tipo?: 'cuadros' | 'pasos';
+}
+
+const { puntos, tipo = 'cuadros' } = Astro.props;
+const Lista = tipo === 'pasos' ? 'ol' : 'ul';
+---
+
+<Lista class:list={['lista', `lista--${tipo}`]}>
+  {
+    puntos.map((punto, i) => (
+      <li>
+        {tipo === 'pasos' && (
+          <span class="lista__numero" aria-hidden="true">
+            {String(i + 1).padStart(2, '0')}
+          </span>
+        )}
+        <p set:html={enLinea(punto)} />
+      </li>
+    ))
+  }
+</Lista>
+
+<style>
+  .lista {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .lista p {
+    color: var(--color-texto-2);
+    line-height: 1.6;
+  }
+
+  .lista :global(strong) {
+    color: var(--color-tinta);
+  }
+
+  .lista--cuadros {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .lista--cuadros li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .lista--cuadros li::before {
+    content: '';
+    flex: none;
+    width: 10px;
+    height: 10px;
+    margin-top: 0.6em;
+    border-radius: 2px;
+    background: var(--color-marca);
+  }
+
+  .lista--pasos {
+    border-bottom: var(--borde);
+  }
+
+  .lista--pasos li {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 16px;
+    padding-block: 22px;
+    border-top: var(--borde);
+  }
+
+  .lista__numero {
+    font-size: 1.875rem; /* 30 px en negrita: texto grande, basta 3:1 (verde sobre papel 4:1) */
+    font-weight: var(--peso-negrita);
+    line-height: 1;
+    color: var(--color-marca);
+  }
+
+  .lista--pasos p {
+    font-size: 1.125rem;
+  }
+</style>

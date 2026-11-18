@@ -1,0 +1,83 @@
+---
+// /contacto/, de diseno/entretecas-contacto.html. Contenido: src/content/paginas/contacto.md.
+// El título de la página es el del formulario (filete encima); al lado, «Qué pasa después» y el correo.
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Migas from '../components/Migas.astro';
+import FormularioContacto from '../components/FormularioContacto.astro';
+import { rellenar } from '../data/sitio';
+import { enLinea } from '../data/texto';
+
+const entrada = await getEntry('contacto', 'contacto');
+if (!entrada) throw new Error('Falta src/content/paginas/contacto.md');
+const d = entrada.data;
+const f = d.formulario;
+---
+
+<Base titulo={d.titulo} descripcion={d.descripcion}>
+  <div class="contenedor contacto">
+    <Migas migas={[{ texto: d.etiqueta ?? d.h1 }]} />
+    <div class="contacto__fila">
+      <div class="contacto__formulario">
+        <FormularioContacto
+          titulo={d.h1}
+          nivelTitulo="h1"
+          aceptacion={f.aceptacion}
+          privacidad={f.privacidad}
+          boton={f.boton}
+        >
+          {d.entradilla.map((parrafo) => <p class="entradilla">{rellenar(parrafo)}</p>)}
+        </FormularioContacto>
+      </div>
+
+      <aside class="contacto__lateral" aria-label="Datos de contacto">
+        <div class="contacto__otros">
+          {d.otros.map((parrafo) => <p set:html={enLinea(parrafo)} />)}
+        </div>
+      </aside>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .contacto {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-2);
+    padding-block: clamp(16px, 2vw, 28px) var(--espacio-seccion);
+  }
+
+  .contacto__fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--espacio-5);
+  }
+
+  .contacto__formulario {
+    flex: 999 1 560px;
+    min-width: 0;
+    max-width: 640px;
+  }
+
+  .contacto__lateral {
+    flex: 1 1 300px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-3);
+  }
+
+  .contacto__otros {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 1rem;
+    color: var(--color-texto-2);
+  }
+
+  .contacto__otros p:first-child {
+    font-size: 1.125rem;
+    font-weight: var(--peso-medio);
+  }
+</style>

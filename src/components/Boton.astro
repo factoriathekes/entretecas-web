@@ -1,0 +1,29 @@
+---
+// Botón. Con `href` es un enlace; sin él, un <button>.
+// Variantes: marca (fondo de color, texto de 19 px en negrita: texto grande, basta 3:1), tinta, borde
+// (secundario) y papel (para bandas oscuras o de color). Ver .boton en global.css.
+interface Props {
+  href?: string;
+  variante?: 'marca' | 'tinta' | 'borde' | 'papel';
+  tipo?: 'button' | 'submit';
+  flecha?: boolean;
+  class?: string;
+}
+
+const { href, variante = 'marca', tipo = 'button', flecha = false, class: clase } = Astro.props;
+const clases = ['boton', variante !== 'marca' && `boton--${variante}`, clase];
+---
+
+{
+  href ? (
+    <a class:list={clases} href={href}>
+      <slot />
+      {flecha && <span aria-hidden="true">→</span>}
+    </a>
+  ) : (
+    <button class:list={clases} type={tipo}>
+      <slot />
+      {flecha && <span aria-hidden="true">→</span>}
+    </button>
+  )
+}

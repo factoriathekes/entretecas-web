@@ -1,0 +1,52 @@
+---
+// Aparición suave al entrar en pantalla: un solo IntersectionObserver, sin librerías.
+// Objetivos: el interior de las secciones (y de las franjas finales) y las tarjetas (servicio, plan, caso). En una
+// sección con tarjetas se animan sus tarjetas y los bloques que no las contienen, nunca los dos a la vez
+// (evita sumar dos desplazamientos). La primera pantalla (portada, cabeceras) no se anima, y lo que ya está
+// visible o por encima al cargar tampoco: nada se oculta antes de la primera pintura.
+// Con prefers-reduced-motion, sin IntersectionObserver o sin JavaScript, todo visible desde el principio.
+---
+
+<script>
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
+    const TARJETA = '.tarjeta-enlace, .tarjeta-plan, .caso';
+    const objetivos = new Set<HTMLElement>();
+
+    document.querySelectorAll<HTMLElement>('main .bloque__interior, main .cta__cuerpo .contenedor').forEach((zona) => {
+      if (!zona.querySelector(TARJETA)) {
+        objetivos.add(zona);
+        return;
+      }
+      for (const hijo of Array.from(zona.children) as HTMLElement[]) {
+        if (!hijo.matches(TARJETA) && !hijo.querySelector(TARJETA)) objetivos.add(hijo);
+      }
+      zona.querySelectorAll<HTMLElement>(TARJETA).forEach((tarjeta) => objetivos.add(tarjeta));
+    });
+
+    const mostrar = (elemento: HTMLElement) => {
+      elemento.classList.add('visto');
+      // Al terminar la transición, el elemento vuelve a su estilo normal (así no estorba al :hover de las tarjetas)
+      setTimeout(() => elemento.classList.remove('revela', 'visto'), 600);
+    };
+
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        for (const entrada of entradas) {
+          if (!entrada.isIntersecting) continue;
+          observador.unobserve(entrada.target);
+          mostrar(entrada.target as HTMLElement);
+        }
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' },
+    );
+
+    // Primero se mide todo y después se escribe (sin reflujos forzados entre lecturas y cambios de clase)
+    const alto = window.innerHeight;
+    const debajo = [...objetivos].filter((elemento) => elemento.getBoundingClientRect().top >= alto);
+    for (const elemento of debajo) {
+      // Lo que ya está visible (o por encima) al cargar no se anima ni se oculta
+      elemento.classList.add('revela');
+      observador.observe(elemento);
+    }
+  }
+</script>

@@ -1,0 +1,14 @@
+---
+// Enlace del tipo «Ver el servicio →»: texto en tinta (con el subrayado general) y flecha en color de marca.
+// La flecha es decorativa: el nombre accesible es solo el texto.
+interface Props {
+  href: string;
+  class?: string;
+}
+
+const { href, class: clase } = Astro.props;
+---
+
+<a class:list={['enlace-flecha', clase]} href={href}
+  ><span class="enlace-flecha__texto"><slot /></span>&nbsp;<span class="enlace-flecha__flecha" aria-hidden="true">→</span></a
+>

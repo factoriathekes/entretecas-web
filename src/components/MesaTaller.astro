@@ -1,0 +1,412 @@
+---
+// Animación de la portada: una caja llega a la mesa con los libros revueltos y una hoja suelta; una lupa
+// revisa cada libro y lo coloca, y la hoja se convierte en la ficha de la caja, que queda en verde.
+// Reconstruida a partir de thekes/marketing/paquete-web/diseno/animacion/mesa-entretecas-blanco.html,
+// con sus mismos tiempos, posiciones y formas (lienzo de 400 × 400).
+//
+// Comportamiento:
+// - Una sola pasada, sin bucle. Arranca cuando el 50 % del componente es visible; hasta entonces queda
+//   quieta en el primer fotograma (la mesa vacía).
+// - Botón «Pausa» / «Seguir» / «Ver de nuevo» (aspecto de enlace, objetivo táctil de 44 px), debajo del
+//   dibujo y alineado a la derecha; su fila de 44 px está reservada siempre que pueda haber animación.
+// - Sin JavaScript o con prefers-reduced-motion: la caja terminada, sin botón.
+---
+
+<div class="mesa" id="mesa-taller">
+  <div class="mesa__lienzo">
+  <svg class="mesa__svg" viewBox="0 0 400 400" role="img" aria-labelledby="mesa-taller-titulo">
+    <title id="mesa-taller-titulo"
+      >Una caja llega a la mesa con los libros revueltos y una hoja suelta. Una lupa recorre la caja de lado a lado, revisa cada libro y lo pone en su
+      sitio; la hoja se convierte en la ficha de la caja, que queda terminada en verde.</title
+    >
+
+    <!-- Caja: cuerpo (icono de 48 × 48 escalado a 3,6), tres libros y la ficha colgada -->
+    <g class="caja">
+      <path
+        class="cuerpo"
+        transform="scale(3.6)"
+        d="M6 19a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v16a1 1 0 0 0 1 1h26a1 1 0 0 0 1-1V19a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v19a4 4 0 0 1-4 4H10a4 4 0 0 1-4-4z"
+      ></path>
+      <g class="pieza l0">
+        <rect transform="scale(3.6)" x="13" y="11" width="5.5" height="22" rx="1" class="tinta"></rect>
+      </g>
+      <g class="pieza l1">
+        <rect transform="scale(3.6)" x="20.5" y="11" width="5.5" height="22" rx="1" class="tinta"></rect>
+      </g>
+      <g class="pieza l2">
+        <g transform="scale(3.6)">
+          <rect x="29.6" y="11" width="5.5" height="22" rx="1" class="marca" transform="rotate(-9.35 29.6 33)"></rect>
+        </g>
+      </g>
+      <g class="colgar">
+        <line class="remate trazo" x1="144" y1="75.6" x2="158" y2="93.6" stroke-width="2.4"></line>
+        <g class="hoja">
+          <rect x="146" y="91.6" width="44" height="28" rx="2.5" class="hoja__papel" stroke-width="2.4"></rect>
+          <line class="trazo" x1="160" y1="99.6" x2="183" y2="99.6" stroke-width="2"></line>
+          <line class="trazo" x1="160" y1="105.6" x2="183" y2="105.6" stroke-width="2"></line>
+          <g class="remate">
+            <circle cx="153" cy="105.6" r="2.2" class="tinta"></circle>
+            <line class="trazo trazo--marca" x1="160" y1="111.6" x2="174" y2="111.6" stroke-width="2"></line>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- Lupa -->
+    <g class="lupa">
+      <circle cx="0" cy="0" r="24" class="lupa__cristal"></circle>
+      <line x1="17" y1="17" x2="38" y2="38"></line>
+    </g>
+
+    <!-- Mesa -->
+    <g class="tinta">
+      <rect x="56" y="296" width="288" height="10" rx="5"></rect>
+      <rect x="84" y="304" width="8" height="58" rx="4"></rect>
+      <rect x="308" y="304" width="8" height="58" rx="4"></rect>
+    </g>
+  </svg>
+  </div>
+  <!-- Fila del botón, fuera del dibujo: reserva su altura desde el principio para que la página no salte -->
+  <div class="mesa__pie">
+    <button class="mesa__control" type="button" hidden>Pausa</button>
+  </div>
+</div>
+
+<script>
+  (() => {
+    const raiz = document.getElementById('mesa-taller');
+    // Movimiento reducido: queda la caja terminada (el estado sin animación), sin botón
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const svg = raiz.querySelector('svg');
+    const boton = raiz.querySelector('.mesa__control');
+    const DURACION = 6300; // ms: la última animación (cuelga) termina a los 6,2 s
+    let fin;
+
+    // En espera, primer fotograma quieto: se pone antes de pintar (script en línea tras el SVG)
+    svg.classList.add('juega', 'pausa');
+
+    const terminar = (ms) => {
+      clearTimeout(fin);
+      fin = setTimeout(() => (boton.textContent = 'Ver de nuevo'), ms);
+    };
+
+    const juega = () => {
+      svg.classList.remove('juega', 'pausa');
+      void svg.getBoundingClientRect(); // reinicia las animaciones
+      svg.classList.add('juega');
+      boton.hidden = false;
+      boton.textContent = 'Pausa';
+      terminar(DURACION);
+    };
+
+    boton.addEventListener('click', () => {
+      if (boton.textContent === 'Ver de nuevo') return juega();
+      const enPausa = svg.classList.toggle('pausa');
+      boton.textContent = enPausa ? 'Seguir' : 'Pausa';
+      if (enPausa) return clearTimeout(fin);
+      const resto = Math.max(
+        0,
+        ...svg.getAnimations({ subtree: true }).map((a) => a.effect.getComputedTiming().endTime - a.currentTime),
+      );
+      terminar(resto);
+    });
+
+    new IntersectionObserver(
+      (entradas, observador) => {
+        if (entradas[0].isIntersecting) {
+          observador.disconnect();
+          juega();
+        }
+      },
+      { threshold: 0.5 },
+    ).observe(svg);
+  })();
+</script>
+
+<style>
+  .mesa {
+    --fondo-mesa: var(--color-blanco);
+    width: 100%;
+  }
+
+  .mesa__lienzo {
+    background: var(--fondo-mesa);
+    border-radius: var(--radio-tarjeta);
+  }
+
+  .mesa__svg {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Fila reservada para el botón: 44 px, botón a la derecha */
+  .mesa__pie {
+    display: flex;
+    justify-content: flex-end;
+    min-height: var(--objetivo-tactil);
+  }
+
+  /* Sin animación posible (movimiento reducido o sin JavaScript), no hay botón ni hace falta su fila */
+  @media (prefers-reduced-motion: reduce), (scripting: none) {
+    .mesa__pie {
+      display: none;
+    }
+  }
+
+  /* Botón con la regla de enlaces: texto en tinta, subrayado de marca de 2 px a 3 px; foco global */
+  .mesa__control {
+    min-height: var(--objetivo-tactil);
+    padding: 12px 0 12px 6px; /* alineado con el borde derecho del dibujo */
+    background: none;
+    border: 0;
+    border-radius: var(--radio-boton);
+    color: var(--color-tinta);
+    font-family: inherit;
+    font-size: 0.9375rem; /* 15 px */
+    line-height: 1.3;
+    cursor: pointer;
+    text-decoration-line: underline;
+    text-decoration-color: var(--color-marca);
+    text-decoration-thickness: var(--subrayado);
+    text-underline-offset: var(--subrayado-separacion);
+  }
+
+  .mesa__control:hover {
+    text-decoration-thickness: var(--subrayado-hover);
+  }
+
+  .mesa__control[hidden] {
+    display: none;
+  }
+
+  /* Colores */
+  .tinta {
+    fill: var(--color-tinta);
+  }
+
+  .marca {
+    fill: var(--color-marca);
+  }
+
+  .trazo {
+    stroke: var(--color-tinta);
+    stroke-linecap: round;
+  }
+
+  .trazo--marca {
+    stroke: var(--color-marca);
+  }
+
+  .hoja__papel {
+    fill: var(--color-blanco);
+    stroke: var(--color-tinta);
+  }
+
+  .lupa {
+    fill: none;
+    stroke: var(--color-tinta);
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0;
+  }
+
+  .lupa__cristal {
+    fill: var(--fondo-mesa);
+    fill-opacity: 0.55;
+  }
+
+  /* Estado final (sin animación): caja en su sitio y en verde */
+  .caja {
+    transform: translate(113.6px, 144.8px);
+  }
+
+  .cuerpo {
+    fill: var(--color-marca);
+  }
+
+  .pieza,
+  .hoja {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+  }
+
+  .colgar {
+    transform-box: view-box;
+    transform-origin: 144px 75.6px;
+  }
+
+  /* Animación: una pasada de 6,2 s */
+  .juega .caja {
+    animation: mesa-llega 1.5s cubic-bezier(0.35, 0.5, 0.25, 1) both;
+  }
+
+  .juega .lupa {
+    animation: mesa-lupa 3.40s linear 1.30s both;
+  }
+
+  .juega .l0 {
+    animation: mesa-l0 0.55s cubic-bezier(0.4, 0, 0.2, 1.15) 1.84s both;
+  }
+
+  .juega .l1 {
+    animation: mesa-l1 0.55s cubic-bezier(0.4, 0, 0.2, 1.15) 2.33s both;
+  }
+
+  .juega .l2 {
+    animation: mesa-l2 0.55s cubic-bezier(0.4, 0, 0.2, 1.15) 2.86s both;
+  }
+
+  .juega .hoja {
+    animation: mesa-hoja 0.8s cubic-bezier(0.5, 0, 0.2, 1) 3.48s both;
+  }
+
+  .juega .cuerpo {
+    animation: mesa-tinte 0.5s ease 4.9s both;
+  }
+
+  .juega .remate {
+    animation: mesa-aparece 0.3s ease 5.3s both;
+  }
+
+  .juega .colgar {
+    animation: mesa-cuelga 0.9s ease-out 5.3s both;
+  }
+
+  .pausa,
+  .pausa * {
+    animation-play-state: paused !important;
+  }
+
+  @keyframes mesa-llega {
+    from {
+      transform: translate(-216.4px, 144.8px);
+    }
+    to {
+      transform: translate(113.6px, 144.8px);
+    }
+  }
+
+  @keyframes mesa-l0 {
+    from {
+      transform: translate(-30px, 2px) rotate(-58deg);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes mesa-l1 {
+    from {
+      transform: translate(4px, 34px) rotate(90deg);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes mesa-l2 {
+    from {
+      transform: translate(30px, -6px) rotate(38deg);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes mesa-hoja {
+    from {
+      transform: translate(-92px, -52px) rotate(-18deg);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  @keyframes mesa-lupa {
+    0.00% { opacity:0.00; transform: translate(100.0px,235px); }
+    1.59% { opacity:0.23; transform: translate(105.0px,235px); }
+    3.18% { opacity:0.45; transform: translate(110.0px,235px); }
+    4.77% { opacity:0.68; transform: translate(115.0px,235px); }
+    6.36% { opacity:0.91; transform: translate(120.0px,235px); }
+    7.96% { opacity:1.00; transform: translate(125.0px,235px); }
+    9.55% { opacity:1.00; transform: translate(130.0px,235px); }
+    11.14% { opacity:1.00; transform: translate(135.0px,235px); }
+    12.74% { opacity:1.00; transform: translate(140.0px,235px); }
+    14.36% { opacity:1.00; transform: translate(145.0px,235px); }
+    16.04% { opacity:1.00; transform: translate(150.0px,235px); }
+    17.83% { opacity:1.00; transform: translate(155.0px,235px); }
+    19.83% { opacity:1.00; transform: translate(160.0px,235px); }
+    22.11% { opacity:1.00; transform: translate(165.0px,235px); }
+    24.67% { opacity:1.00; transform: translate(170.0px,235px); }
+    27.35% { opacity:1.00; transform: translate(175.0px,235px); }
+    29.97% { opacity:1.00; transform: translate(180.0px,235px); }
+    32.51% { opacity:1.00; transform: translate(185.0px,235px); }
+    35.09% { opacity:1.00; transform: translate(190.0px,235px); }
+    37.75% { opacity:1.00; transform: translate(195.0px,235px); }
+    40.43% { opacity:1.00; transform: translate(200.0px,235px); }
+    42.94% { opacity:1.00; transform: translate(205.0px,235px); }
+    45.24% { opacity:1.00; transform: translate(210.0px,235px); }
+    47.43% { opacity:1.00; transform: translate(215.0px,235px); }
+    49.65% { opacity:1.00; transform: translate(220.0px,235px); }
+    52.04% { opacity:1.00; transform: translate(225.0px,235px); }
+    54.61% { opacity:1.00; transform: translate(230.0px,235px); }
+    57.14% { opacity:1.00; transform: translate(235.0px,235px); }
+    59.43% { opacity:1.00; transform: translate(240.0px,235px); }
+    61.45% { opacity:1.00; transform: translate(245.0px,235px); }
+    63.26% { opacity:1.00; transform: translate(250.0px,235px); }
+    64.97% { opacity:1.00; transform: translate(255.0px,235px); }
+    66.66% { opacity:1.00; transform: translate(260.0px,235px); }
+    68.43% { opacity:1.00; transform: translate(265.0px,235px); }
+    70.37% { opacity:1.00; transform: translate(270.0px,235px); }
+    72.56% { opacity:1.00; transform: translate(275.0px,235px); }
+    75.03% { opacity:1.00; transform: translate(280.0px,235px); }
+    77.57% { opacity:1.00; transform: translate(285.0px,235px); }
+    79.95% { opacity:1.00; transform: translate(290.0px,235px); }
+    82.04% { opacity:1.00; transform: translate(295.0px,235px); }
+    83.90% { opacity:1.00; transform: translate(300.0px,235px); }
+    85.61% { opacity:1.00; transform: translate(305.0px,235px); }
+    87.25% { opacity:1.00; transform: translate(310.0px,235px); }
+    88.86% { opacity:1.00; transform: translate(315.0px,235px); }
+    90.45% { opacity:1.00; transform: translate(320.0px,235px); }
+    92.04% { opacity:1.00; transform: translate(325.0px,235px); }
+    93.64% { opacity:0.91; transform: translate(330.0px,235px); }
+    95.23% { opacity:0.68; transform: translate(335.0px,235px); }
+    96.82% { opacity:0.45; transform: translate(340.0px,235px); }
+    98.41% { opacity:0.23; transform: translate(345.0px,235px); }
+    100.00% { opacity:-0.00; transform: translate(350.0px,235px); }
+  }
+
+  @keyframes mesa-tinte {
+    from {
+      fill: var(--color-vacio);
+    }
+    to {
+      fill: var(--color-marca);
+    }
+  }
+
+  @keyframes mesa-aparece {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes mesa-cuelga {
+    0% {
+      transform: rotate(-16deg);
+    }
+    40% {
+      transform: rotate(8deg);
+    }
+    70% {
+      transform: rotate(-3deg);
+    }
+    100% {
+      transform: none;
+    }
+  }
+</style>

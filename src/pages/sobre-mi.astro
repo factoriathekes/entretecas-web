@@ -1,0 +1,144 @@
+---
+// /sobre-mi/, de diseno/entretecas-sobre-mi.html. Contenido: src/content/paginas/sobre-mi.md.
+// La fotografía está pendiente: hueco reservado con la misma proporción (4:5), sin imagen de relleno.
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import CabezaPagina from '../components/CabezaPagina.astro';
+import Seccion from '../components/Seccion.astro';
+import EncabezadoSeccion from '../components/EncabezadoSeccion.astro';
+import Filete from '../components/Filete.astro';
+import Boton from '../components/Boton.astro';
+import EnlaceFlecha from '../components/EnlaceFlecha.astro';
+import Cita from '../components/Cita.astro';
+import BloqueCTA from '../components/BloqueCTA.astro';
+import { rellenar } from '../data/sitio';
+import { enLinea } from '../data/texto';
+
+const entrada = await getEntry('sobreMi', 'sobre-mi');
+if (!entrada) throw new Error('Falta src/content/paginas/sobre-mi.md');
+const d = entrada.data;
+---
+
+<Base titulo={d.titulo} descripcion={rellenar(d.descripcion)}>
+  <CabezaPagina migas={[{ texto: d.etiqueta ?? d.h1 }]} etiqueta={d.etiqueta} h1={d.h1} entradilla={d.entradilla} lateralDelante>
+    <Boton href={d.boton.ruta}>{d.boton.texto}</Boton>
+    <div slot="lateral" class="foto">
+      {
+        d.foto.imagen ? (
+          <img src={d.foto.imagen} alt={d.foto.alt} width="760" height="950" />
+        ) : (
+          <div class="foto__hueco" role="img" aria-label={`Fotografía de ${d.foto.alt} (pendiente)`}>
+            <span aria-hidden="true">[Fotografía]</span>
+          </div>
+        )
+      }
+    </div>
+  </CabezaPagina>
+
+  <Seccion fondo="blanco" etiquetadaPor="como-titular">
+    <EncabezadoSeccion id="como-titular" etiqueta={d.como.etiqueta} titular={d.como.titular} />
+    <ul class="rejilla como" style="--min: 300px" role="list">
+      {
+        d.como.puntos.map((punto) => (
+          <li>
+            <Filete />
+            <p set:html={enLinea(punto)} />
+          </li>
+        ))
+      }
+    </ul>
+  </Seccion>
+
+  <Seccion>
+    <div class="rejilla columnas" style="--min: 320px">
+      {
+        d.columnas.map((columna) => (
+          <section class="columna">
+            <h2 class="columna__titular">{columna.titular}</h2>
+            {columna.parrafos.map((parrafo) => (
+              <p set:html={enLinea(parrafo)} />
+            ))}
+            {columna.enlace && <EnlaceFlecha href={columna.enlace.ruta}>{columna.enlace.texto}</EnlaceFlecha>}
+          </section>
+        ))
+      }
+    </div>
+    {d.cita && <Cita {...d.cita} />}
+  </Seccion>
+
+  <BloqueCTA id="empezar" titular={d.cta.titular}>
+    <p>{rellenar(d.cta.texto)}</p>
+    <p><Boton href={d.cta.boton.ruta}>{d.cta.boton.texto}</Boton></p>
+  </BloqueCTA>
+</Base>
+
+<style>
+  .foto {
+    max-width: 380px;
+  }
+
+  .foto img,
+  .foto__hueco {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radio-tarjeta);
+  }
+
+  .foto__hueco {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-linea);
+    color: var(--color-texto-3);
+    font-size: 0.9375rem;
+  }
+
+  .como {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    gap: 32px 40px;
+  }
+
+  .como li {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .como p {
+    font-size: 1.0625rem;
+    line-height: 1.6;
+    color: var(--color-texto-2);
+  }
+
+  .como :global(strong) {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 1.1875rem;
+    color: var(--color-tinta);
+  }
+
+  .columnas {
+    gap: var(--espacio-4) var(--espacio-5);
+  }
+
+  .columna {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .columna__titular {
+    font-size: var(--texto-h3);
+  }
+
+  .columna p {
+    font-size: var(--texto-base);
+    line-height: 1.65;
+    color: var(--color-texto-2);
+  }
+</style>

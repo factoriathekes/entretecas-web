@@ -1,0 +1,346 @@
+---
+// /planes/, de diseno/entretecas-planes.html. Contenido: src/content/paginas/planes.md.
+// La comparativa es una tabla desde 760 px; por debajo, una tarjeta por plan con los mismos datos
+// (solo una de las dos versiones se muestra; la otra va con display: none y no la leen los lectores).
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import CabezaPagina from '../components/CabezaPagina.astro';
+import Seccion from '../components/Seccion.astro';
+import EncabezadoSeccion from '../components/EncabezadoSeccion.astro';
+import Etiqueta from '../components/Etiqueta.astro';
+import Filete from '../components/Filete.astro';
+import Boton from '../components/Boton.astro';
+import Cita from '../components/Cita.astro';
+import Preguntas from '../components/Preguntas.astro';
+import BloqueCTA from '../components/BloqueCTA.astro';
+import { rellenar } from '../data/sitio';
+import { enLinea } from '../data/texto';
+
+const entrada = await getEntry('planes', 'planes');
+if (!entrada) throw new Error('Falta src/content/paginas/planes.md');
+const d = entrada.data;
+const { comparativa: c } = d;
+---
+
+<Base titulo={d.titulo} descripcion={d.descripcion}>
+  <CabezaPagina migas={[{ texto: d.etiqueta ?? d.h1 }]} etiqueta={d.etiqueta} h1={d.h1} entradilla={d.entradilla}>
+    <Boton href={d.boton.ruta}>{d.boton.texto}</Boton>
+  </CabezaPagina>
+
+  <!-- Todos los planes incluyen -->
+  <Seccion fondo="blanco" etiquetadaPor="incluye-titular">
+    <EncabezadoSeccion id="incluye-titular" etiqueta={d.incluye.etiqueta} titular={d.incluye.titular} />
+    <ul class="rejilla puntos" style="--min: 280px" role="list">
+      {
+        d.incluye.puntos.map((punto) => (
+          <li>
+            <Filete />
+            <h3>{punto.titulo}</h3>
+            <p set:html={enLinea(punto.texto)} />
+          </li>
+        ))
+      }
+    </ul>
+  </Seccion>
+
+  <!-- Comparativa -->
+  <Seccion etiquetadaPor="comparativa-titular">
+    <EncabezadoSeccion id="comparativa-titular" etiqueta={c.etiqueta} titular={c.titular} />
+
+    <div class="comparativa">
+      <table class="comparativa__tabla">
+        <caption class="solo-lectores">{c.leyenda}</caption>
+        <thead>
+          <tr>
+            <td></td>
+            {
+              c.planes.map((plan) => (
+                <th scope="col" class:list={{ destacado: plan.destacado }}>
+                  <span class="comparativa__nombre">{plan.nombre}</span>
+                  <span class="comparativa__lema">{plan.lema}</span>
+                </th>
+              ))
+            }
+          </tr>
+        </thead>
+        <tbody>
+          {
+            c.filas.map((fila) => (
+              <tr>
+                <th scope="row">{fila.concepto}</th>
+                {fila.valores.map((valor, i) => (
+                  <td class:list={{ destacado: c.planes[i]?.destacado }}>
+                    {valor === '—' ? <span aria-label="No incluido">—</span> : valor}
+                  </td>
+                ))}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="planes-movil" role="list">
+      {
+        c.planes.map((plan, i) => (
+          <li class:list={['plan-movil', 'tarjeta', { 'plan-movil--destacado': plan.destacado }]}>
+            <h3 class="plan-movil__nombre">{plan.nombre}</h3>
+            <p class="plan-movil__lema">{plan.lema}</p>
+            <dl>
+              {c.filas.map((fila) => (
+                <div>
+                  <dt>{fila.concepto}</dt>
+                  <dd>{fila.valores[i] === '—' ? 'No incluido' : fila.valores[i]}</dd>
+                </div>
+              ))}
+            </dl>
+          </li>
+        ))
+      }
+    </ul>
+
+    {c.nota.map((parrafo) => <p class="comparativa__nota" set:html={enLinea(parrafo)} />)}
+  </Seccion>
+
+  <!-- Sin inversión inicial, catálogos colectivos, lo que queda fuera -->
+  <Seccion fondo="blanco">
+    <div class="rejilla bloques" style="--min: 300px">
+      {
+        d.bloques.map((bloque) => (
+          <section class:list={['bloque-plan', 'tarjeta', bloque.oscuro ? 'fondo-tinta' : 'bloque-plan--claro']}>
+            <Etiqueta>{bloque.etiqueta}</Etiqueta>
+            <h2 class="bloque-plan__titular">{bloque.titular}</h2>
+            {bloque.parrafos.map((parrafo) => (
+              <p set:html={enLinea(parrafo)} />
+            ))}
+          </section>
+        ))
+      }
+    </div>
+  </Seccion>
+
+  {
+    d.cita && (
+      <Seccion>
+        <Cita {...d.cita} />
+      </Seccion>
+    )
+  }
+
+  <Seccion fondo="blanco" etiquetadaPor="preguntas-titular">
+    <Preguntas id="preguntas-titular" {...d.preguntas} />
+  </Seccion>
+
+  <BloqueCTA id="empezar" titular={d.cta.titular}>
+    <p>{rellenar(d.cta.texto)}</p>
+    {d.cta.aviso && <p>{rellenar(d.cta.aviso)}</p>}
+    <p><Boton href={d.cta.boton.ruta}>{d.cta.boton.texto}</Boton></p>
+  </BloqueCTA>
+</Base>
+
+<style>
+  .puntos {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    gap: 32px;
+  }
+
+  .puntos li {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .puntos :global(.filete) {
+    margin-bottom: 8px;
+  }
+
+  .puntos h3 {
+    font-size: 1.1875rem;
+  }
+
+  .puntos p {
+    font-size: 1rem;
+    color: var(--color-texto-2);
+  }
+
+  /* Tabla (desde 760 px) */
+  .comparativa {
+    display: none;
+    overflow-x: auto;
+    padding: 8px 24px 0;
+    background: var(--color-blanco);
+    border: var(--borde);
+    border-radius: var(--radio-tarjeta);
+  }
+
+  .comparativa__tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .comparativa__tabla th,
+  .comparativa__tabla td {
+    padding: 16px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .comparativa__tabla tbody th,
+  .comparativa__tabla tbody td {
+    border-top: var(--borde);
+  }
+
+  .comparativa__tabla tbody th {
+    padding-left: 0;
+    font-weight: var(--peso-medio);
+    width: 28%;
+  }
+
+  .comparativa__tabla td {
+    color: var(--color-tinta);
+  }
+
+  .comparativa__tabla thead th {
+    vertical-align: bottom;
+    padding-top: 20px;
+  }
+
+  .comparativa__nombre {
+    display: block;
+    font-size: 1.5rem; /* 24 px negrita: en el destacado va en papel sobre color de marca (texto grande) */
+    font-weight: var(--peso-negrita);
+    letter-spacing: -0.01em;
+  }
+
+  .comparativa__lema {
+    display: block;
+    margin-top: 4px;
+    font-size: var(--texto-pequeno);
+    font-weight: var(--peso-normal);
+    color: var(--color-texto-3);
+  }
+
+  /* Plan destacado: el nombre en una franja de color de marca y la columna enmarcada en color de marca;
+     el lema y los datos, en tinta sobre blanco (texto pequeño: nunca sobre el color de marca) */
+  .comparativa__tabla th.destacado,
+  .comparativa__tabla td.destacado {
+    box-shadow: inset 2px 0 0 var(--color-marca), inset -2px 0 0 var(--color-marca);
+  }
+
+  .comparativa__tabla thead th.destacado {
+    padding: 0;
+    border-radius: var(--radio-tarjeta) var(--radio-tarjeta) 0 0;
+    box-shadow: inset 0 2px 0 var(--color-marca), inset 2px 0 0 var(--color-marca), inset -2px 0 0 var(--color-marca);
+  }
+
+  .comparativa__tabla thead th.destacado .comparativa__nombre {
+    padding: 20px 16px 14px;
+    background: var(--color-marca);
+    color: var(--color-papel);
+    border-radius: var(--radio-tarjeta) var(--radio-tarjeta) 0 0;
+  }
+
+  .comparativa__tabla thead th.destacado .comparativa__lema {
+    margin: 0;
+    padding: 10px 16px 16px;
+  }
+
+  .comparativa__tabla tbody tr:last-child td.destacado {
+    box-shadow: inset 2px 0 0 var(--color-marca), inset -2px 0 0 var(--color-marca), inset 0 -2px 0 var(--color-marca);
+  }
+
+  /* Tarjetas (por debajo de 760 px) */
+  .planes-movil {
+    display: grid;
+    gap: var(--espacio-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .plan-movil {
+    padding: 28px;
+    background: var(--color-blanco);
+    border: var(--borde);
+  }
+
+  .plan-movil--destacado {
+    border: 2px solid var(--color-marca);
+  }
+
+  .plan-movil__nombre {
+    font-size: 1.5rem;
+  }
+
+  .plan-movil__lema {
+    margin-top: 4px;
+    color: var(--color-texto-3);
+  }
+
+  .plan-movil dl {
+    margin: 18px 0 0;
+  }
+
+  .plan-movil dl div {
+    padding-block: 12px;
+    border-top: var(--borde);
+  }
+
+  .plan-movil dt {
+    font-size: var(--texto-pequeno);
+    color: var(--color-texto-3);
+  }
+
+  .plan-movil dd {
+    margin: 2px 0 0;
+    font-weight: var(--peso-medio);
+  }
+
+  @media (min-width: 760px) {
+    .comparativa {
+      display: block;
+    }
+
+    .planes-movil {
+      display: none;
+    }
+  }
+
+  .comparativa__nota {
+    max-width: 46rem;
+    font-size: 1rem;
+    color: var(--color-texto-2);
+  }
+
+  /* Bloques: el primero en tinta, los otros en blanco con borde; un solo acento (el cuadrado de la etiqueta) */
+  .bloque-plan {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: clamp(28px, 4vw, 34px);
+  }
+
+  .bloque-plan--claro {
+    background: var(--color-papel);
+    border: var(--borde);
+  }
+
+  .bloque-plan__titular {
+    font-size: 1.375rem;
+    letter-spacing: -0.01em;
+  }
+
+  .bloque-plan p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--color-texto-2);
+  }
+
+  .bloque-plan.fondo-tinta p {
+    color: var(--color-texto-claro);
+  }
+</style>

@@ -1,0 +1,317 @@
+---
+// Plantilla de servicio (/servicios/<archivo>/), de diseno/entretecas-servicio.html. Contenido en
+// src/content/servicios/*.md: cabecera con recuadro de precio, secciones en orden (las «mitad» seguidas
+// comparten banda en dos columnas), testimonio, preguntas, franja final y los otros servicios.
+import { getCollection, getEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import CabezaPagina from '../../components/CabezaPagina.astro';
+import Seccion from '../../components/Seccion.astro';
+import EncabezadoSeccion from '../../components/EncabezadoSeccion.astro';
+import Etiqueta from '../../components/Etiqueta.astro';
+import Lista from '../../components/Lista.astro';
+import Boton from '../../components/Boton.astro';
+import Cita from '../../components/Cita.astro';
+import Preguntas from '../../components/Preguntas.astro';
+import BloqueCTA from '../../components/BloqueCTA.astro';
+import FormularioContacto from '../../components/FormularioContacto.astro';
+import QuePasaDespues from '../../components/QuePasaDespues.astro';
+import TarjetaServicio from '../../components/TarjetaServicio.astro';
+import { rellenar, sitio } from '../../data/sitio';
+import { enLinea } from '../../data/texto';
+import { servicio as datosServicio } from '../../data/datos-estructurados';
+
+export async function getStaticPaths() {
+  const servicios = await getCollection('servicios');
+  return servicios.map((servicio) => ({ params: { servicio: servicio.id }, props: { servicio } }));
+}
+
+const { servicio } = Astro.props;
+const d = servicio.data;
+const ruta = `/servicios/${servicio.id}/`;
+
+// Secciones agrupadas: las «mitad» seguidas van juntas en una banda
+type SeccionServicio = (typeof d.secciones)[number];
+const grupos: SeccionServicio[][] = [];
+for (const seccion of d.secciones) {
+  const ultimo = grupos.at(-1);
+  if (seccion.mitad && ultimo?.length === 1 && ultimo[0].mitad) ultimo.push(seccion);
+  else grupos.push([seccion]);
+}
+// Bandas alternas: blanco, papel, blanco…
+const fondo = (i: number) => (i % 2 === 0 ? 'blanco' : 'papel');
+const idSeccion = (i: number, j: number) => `seccion-${i + 1}${j ? `-${j + 1}` : ''}`;
+
+// Otros servicios: las tarjetas de la portada (misma fuente), sin la de esta página
+const portada = await getEntry('portada', 'portada');
+const otros = (portada?.data.servicios.tarjetas ?? []).filter((tarjeta) => tarjeta.ruta !== ruta);
+const nBandas = grupos.length + (d.cita ? 1 : 0);
+---
+
+<Base titulo={d.titulo} descripcion={d.descripcion} datos={[datosServicio({ nombre: d.nombre, descripcion: d.descripcion, url: `${sitio.url}${ruta}` })]}>
+  <CabezaPagina migas={[{ texto: 'Servicios', ruta: '/#servicios' }, { texto: d.nombre }]} etiqueta={d.etiqueta} h1={d.h1} lema={d.lema} entradilla={d.entradilla}>
+    {!d.formulario && <Boton href={d.boton.ruta}>{d.boton.texto}</Boton>}
+    {
+      d.formulario && (
+        <div id="pedir" class="pedir">
+          <FormularioContacto
+            id="diagnostico"
+            completo={{ sistemas: d.formulario.sistemas, registros: d.formulario.registros, bibliotecas: d.formulario.bibliotecas, intereses: d.formulario.intereses }}
+            aceptacion={d.formulario.aceptacion}
+            privacidad={d.formulario.privacidad}
+            boton={d.formulario.boton}
+          />
+          <QuePasaDespues />
+        </div>
+      )
+    }
+    <aside slot="lateral" class="precio fondo-tinta tarjeta" aria-labelledby="precio-titulo">
+      <Etiqueta><span id="precio-titulo">{d.precio.etiqueta}</span></Etiqueta>
+      {
+        d.precio.cifra ? (
+          <p class="precio__importe">
+            {d.precio.antes && <span class="precio__antes">{d.precio.antes}</span>}
+            <span class="precio__cifra">{rellenar(d.precio.cifra)}</span>
+            {d.precio.despues && <span class="precio__despues">{d.precio.despues}</span>}
+          </p>
+        ) : (
+          d.precio.texto && <p class="precio__texto">{rellenar(d.precio.texto)}</p>
+        )
+      }
+      {d.precio.puntos.length > 0 && <Lista puntos={d.precio.puntos} />}
+    </aside>
+  </CabezaPagina>
+
+  {
+    grupos.map((grupo, i) => (
+      <Seccion fondo={fondo(i)} etiquetadaPor={idSeccion(i, 0)}>
+        <div class:list={['grupo', { 'grupo--dos': grupo.length > 1 }]}>
+          {grupo.map((seccion, j) => (
+            <div class="bloque-servicio">
+              <EncabezadoSeccion id={idSeccion(i, j)} etiqueta={seccion.etiqueta} titular={seccion.titular} />
+              {seccion.puntos.length > 0 && <Lista puntos={seccion.puntos} tipo={seccion.tipo} />}
+              {seccion.tabla && (
+                <div class="tabla-envoltura">
+                  <table class="tabla">
+                    <caption class="solo-lectores">{seccion.tabla.leyenda}</caption>
+                    <thead>
+                      <tr>
+                        {seccion.tabla.columnas.map((columna) => (
+                          <th scope="col">{columna}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {seccion.tabla.filas.map((fila) => (
+                        <tr>
+                          {fila.celdas.map((celda, k) => (k === 0 ? <th scope="row">{celda}</th> : <td>{celda}</td>))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {seccion.parrafos.map((parrafo) => (
+                <p class="bloque-servicio__parrafo" set:html={enLinea(parrafo)} />
+              ))}
+            </div>
+          ))}
+        </div>
+      </Seccion>
+    ))
+  }
+
+  {
+    d.cita && (
+      <Seccion fondo={fondo(grupos.length)}>
+        <Cita {...d.cita} />
+      </Seccion>
+    )
+  }
+
+  <Seccion fondo={fondo(nBandas)} etiquetadaPor="preguntas-titular">
+    <Preguntas id="preguntas-titular" {...d.preguntas} />
+  </Seccion>
+
+  <BloqueCTA id="empezar" titular={d.cta.titular}>
+    <p>{rellenar(d.cta.texto)}</p>
+    {d.cta.boton && <p><Boton href={d.cta.boton.ruta}>{d.cta.boton.texto}</Boton></p>}
+  </BloqueCTA>
+
+  <Seccion fondo="blanco" etiquetadaPor="otros-titular">
+    <EncabezadoSeccion id="otros-titular" etiqueta={d.otros.etiqueta} titular={d.otros.titular} />
+    <ul class="rejilla otros" style="--min: 240px" role="list">
+      {
+        otros.map((tarjeta) => (
+          <li>
+            <TarjetaServicio {...tarjeta} />
+          </li>
+        ))
+      }
+    </ul>
+  </Seccion>
+</Base>
+
+<style is:global>
+  /* El botón del bloque final sube al formulario de la cabecera con desplazamiento suave (no con movimiento reducido) */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+</style>
+
+<style is:global>
+  /* Cuando la cabecera se apila (móvil y tablet), el recuadro de precio va justo después de la entradilla y antes
+     del formulario; en escritorio se queda a la derecha. Solo en la cabecera que lleva el formulario. */
+  @media (max-width: 999px) {
+    .cabeza__fila:has(.pedir) {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      gap: 22px;
+    }
+
+    .cabeza__fila:has(.pedir) > .cabeza__texto {
+      display: contents;
+    }
+
+    .cabeza__fila:has(.pedir) > .cabeza__texto > * {
+      align-self: flex-start;
+    }
+
+    .cabeza__fila:has(.pedir) > .cabeza__lateral {
+      order: 1;
+    }
+
+    .cabeza__fila:has(.pedir) > .cabeza__texto > .pedir {
+      order: 2;
+      align-self: stretch;
+    }
+  }
+</style>
+
+<style>
+  /* Formulario completo y, debajo, «Qué pasa después», dentro de la cabecera (ancla #pedir) */
+  .pedir {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-4);
+    align-self: stretch;
+    width: 100%;
+    margin-top: var(--espacio-2);
+  }
+
+  .precio {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: clamp(28px, 4vw, 36px);
+  }
+
+  .precio__importe {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .precio__antes,
+  .precio__despues {
+    font-size: 0.9375rem;
+    color: var(--color-texto-claro-2);
+  }
+
+  .precio__cifra {
+    font-size: clamp(2.5rem, 2rem + 2vw, 2.875rem); /* 40 → 46 px */
+    font-weight: var(--peso-negrita);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .precio__texto {
+    font-size: clamp(1.5rem, 1.3rem + 0.8vw, 1.75rem); /* 24 → 28 px */
+    font-weight: var(--peso-negrita);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .precio :global(.lista p) {
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--color-texto-claro);
+  }
+
+  .grupo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-4);
+  }
+
+  .grupo--dos {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--espacio-4) var(--espacio-5);
+  }
+
+  .grupo--dos > .bloque-servicio {
+    flex: 1 1 420px;
+    min-width: 0;
+  }
+
+  .bloque-servicio {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 52rem;
+  }
+
+  .bloque-servicio__parrafo {
+    font-size: var(--texto-base);
+    line-height: 1.65;
+    color: var(--color-texto-2);
+    max-width: 46rem;
+  }
+
+  .tabla-envoltura {
+    overflow-x: auto;
+  }
+
+  .tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .tabla th,
+  .tabla td {
+    padding: 14px 16px 14px 0;
+    border-bottom: var(--borde);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .tabla thead th {
+    padding-top: 0;
+    font-size: var(--texto-pequeno);
+    font-weight: var(--peso-medio);
+    letter-spacing: var(--interletraje-etiqueta);
+    text-transform: uppercase;
+    color: var(--color-texto-3);
+    border-bottom: 2px solid var(--color-tinta);
+  }
+
+  .tabla tbody th {
+    font-size: 1.125rem;
+    white-space: nowrap;
+  }
+
+  .tabla td {
+    color: var(--color-texto-2);
+  }
+
+  .otros {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>

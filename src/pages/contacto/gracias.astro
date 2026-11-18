@@ -1,0 +1,19 @@
+---
+// /contacto/gracias/: destino del envío correcto del formulario de contacto (public/api/enviar.php, 303).
+// Sin indexar (noindex) y fuera del sitemap (astro.config.mjs). Textos sencillos, en esta página.
+import Base from '../../layouts/Base.astro';
+import CabezaPagina from '../../components/CabezaPagina.astro';
+import Boton from '../../components/Boton.astro';
+import { rellenar, sitio } from '../../data/sitio';
+---
+
+<Base titulo={`Mensaje enviado · ${sitio.nombre}`} noindex>
+  <CabezaPagina
+    migas={[{ texto: 'Contacto', ruta: '/contacto/' }, { texto: 'Mensaje enviado' }]}
+    etiqueta="Mensaje enviado"
+    h1="Gracias. He recibido tu mensaje."
+    entradilla={[rellenar('Te respondo en {respuestaContacto} como máximo.')]}
+  >
+    <Boton href="/">Volver a la portada</Boton>
+  </CabezaPagina>
+</Base>

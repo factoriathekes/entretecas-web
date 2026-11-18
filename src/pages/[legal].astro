@@ -1,0 +1,83 @@
+---
+// Páginas legales (/aviso-legal/, /privacidad/, /cookies/). Contenido: src/content/legal/*.md (BORRADORES:
+// ver CLAUDE.md). El Markdown admite las marcas de rellenar() con los datos del titular de sitio.json.
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Migas from '../components/Migas.astro';
+import Rellenar from '../components/Rellenar.astro';
+
+export async function getStaticPaths() {
+  const paginas = await getCollection('legal');
+  return paginas.map((pagina) => ({ params: { legal: pagina.id }, props: { pagina } }));
+}
+
+const { pagina } = Astro.props;
+const { Content } = await render(pagina);
+const fecha = new Intl.DateTimeFormat('es-ES', { dateStyle: 'long', timeZone: 'UTC' }).format(pagina.data.actualizado);
+---
+
+<Base titulo={pagina.data.titulo} descripcion={pagina.data.descripcion}>
+  <article class="contenedor legal" aria-labelledby="titular-pagina">
+    <Migas migas={[{ texto: pagina.data.h1 }]} />
+    <h1 id="titular-pagina" class="legal__titular">{pagina.data.h1}</h1>
+    <p class="legal__fecha">Última actualización: <time datetime={pagina.data.actualizado.toISOString().slice(0, 10)}>{fecha}</time></p>
+    <div class="legal__texto">
+      <Rellenar><Content /></Rellenar>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .legal {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-block: clamp(16px, 2vw, 28px) var(--espacio-seccion);
+  }
+
+  .legal__titular {
+    font-size: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+  }
+
+  .legal__fecha {
+    font-size: var(--texto-pequeno);
+    color: var(--color-texto-3);
+  }
+
+  .legal__texto {
+    max-width: 46rem;
+    margin-top: 12px;
+    font-size: var(--texto-base);
+    line-height: 1.7;
+    color: var(--color-texto-2);
+  }
+
+  .legal__texto :global(h2) {
+    margin: 40px 0 12px;
+    font-size: var(--texto-h3);
+    color: var(--color-tinta);
+  }
+
+  .legal__texto :global(p),
+  .legal__texto :global(ul) {
+    margin: 0 0 14px;
+  }
+
+  .legal__texto :global(ul) {
+    padding-left: 22px;
+  }
+
+  .legal__texto :global(li + li) {
+    margin-top: 6px;
+  }
+
+  .legal__texto :global(li::marker) {
+    color: var(--color-marca);
+  }
+
+  .legal__texto :global(strong) {
+    color: var(--color-tinta);
+  }
+</style>

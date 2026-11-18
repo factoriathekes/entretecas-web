@@ -1,0 +1,576 @@
+---
+// Formulario de contacto y de diagnóstico. Envía por POST a public/api/enviar.php (PHP + API de Brevo), que
+// valida otra vez en el servidor y redirige a la página de gracias (/contacto/gracias/ o
+// /servicios/diagnostico/gracias/). Funciona sin JavaScript: si el servidor encuentra algún problema, devuelve
+// esta misma página con el mensaje y los datos conservados. El JavaScript de abajo solo valida antes de enviar
+// (mejor experiencia) y pide al servidor la marca de tiempo firmada del campo oculto `t`.
+// Campos ocultos: `formulario` (diagnostico | contacto, según la variante), `pagina` (ruta de origen), `t`
+// (marca de tiempo firmada; la rellena el JS al cargar y, si falta, el servidor pide un segundo clic) y la
+// trampa `web`. Si cambian los nombres de campo o las listas, mirar también public/api/enviar.php: las listas
+// (sistemas, registros, bibliotecas, intereses) se generan en el build desde diagnostico.md (api/listas.php).
+// Dos variantes con el mismo componente:
+// - corta (por defecto; portada y /contacto/): nombre, correo, teléfono (opcional), entidad y mensaje.
+// - completa (con `completo`; bloque «Empecemos por un diagnóstico» de /servicios/diagnostico/): además
+//   sistema actual, número aproximado de registros y bibliotecas, un grupo de casillas «¿Qué te interesa?»
+//   (interes[]: llegan todas las marcadas, igual que el resto de campos) y el mensaje se titula «¿Qué necesitas?».
+//   ?servicio=<clave> en la dirección marca la casilla correspondiente (script de abajo); sin JavaScript, nada.
+// Nombres de campo (los que lee el servidor): nombre, correo, telefono, entidad, mensaje, privacidad
+// (casilla obligatoria) y la trampa «web»; en la completa, también sistema, registros, bibliotecas e interes[].
+// Los desplegables empiezan en «Elige una opción» (sin valor) y son obligatorios, con su mensaje de error.
+//
+// Sobre papel, sin panel, campos en blanco. Con `titulo` (para /contacto/), filete de marca encima del título;
+// sin él, sin filete.
+// Rejilla por ancho de pantalla: móvil, una columna; tableta (desde 640 px), dos columnas y el tercer campo de
+// cada fila (`.campo--ultimo`) a todo el ancho; escritorio (desde 960 px), tres columnas. Nombre | correo |
+// teléfono; entidad a todo el ancho; sistema | registros | bibliotecas (solo la completa); mensaje a todo el
+// ancho. El orden del HTML es el visual (tabulador).
+// Errores: borde y mensaje en --color-error; el mensaje va enlazado al campo con aria-describedby.
+import Boton from './Boton.astro';
+import Filete from './Filete.astro';
+import { sitio } from '../data/sitio';
+
+interface Props {
+  /** Texto de la casilla; lo que va entre [corchetes] enlaza a la política de privacidad */
+  aceptacion: string;
+  /** Texto legal bajo el botón; mismo formato */
+  privacidad: string;
+  boton: string;
+  /** Título propio del formulario (opcional: en la portada lo da la franja del bloque) */
+  titulo?: string;
+  /** h1 en /contacto/, donde el título del formulario es el de la página */
+  nivelTitulo?: 'h1' | 'h2';
+  /** Variante completa: sistema actual, número aproximado de registros y bibliotecas. Sin esto, la corta. */
+  completo?: {
+    sistemas: string[];
+    registros: string[];
+    bibliotecas: { leyenda: string; opciones: string[] };
+    /** «¿Qué te interesa?»: casillas (varias, ninguna obligatoria); `clave` = valor de ?servicio= que la preselecciona */
+    intereses: { leyenda: string; opciones: { texto: string; clave?: string }[] };
+  };
+  id?: string;
+}
+
+const { aceptacion, privacidad, boton, titulo, nivelTitulo = 'h2', completo, id = 'formulario-contacto' } = Astro.props;
+const Titulo = nivelTitulo;
+const tipoFormulario = completo ? 'diagnostico' : 'contacto';
+// Primera opción de los desplegables: sin valor, para que haya que elegir (son obligatorios)
+const SIN_ELEGIR = 'Elige una opción';
+const rutaPrivacidad = sitio.legal.find((enlace) => enlace.ruta.includes('privacidad'))?.ruta ?? '/privacidad/';
+
+/** «… en la [política de privacidad].» → trozos de texto y de enlace */
+const partes = (texto: string) =>
+  texto
+    .split(/(\[[^\]]+\])/)
+    .filter(Boolean)
+    .map((trozo) => (trozo.startsWith('[') ? { enlace: trozo.slice(1, -1) } : { texto: trozo }));
+---
+
+<div class="bloque-formulario">
+  {
+    titulo && (
+      <div class="bloque-formulario__cabeza">
+        <Filete />
+        <Titulo class:list={['bloque-formulario__titulo', `bloque-formulario__titulo--${nivelTitulo}`]} id={`${id}-titulo`}>{titulo}</Titulo>
+        <slot />
+      </div>
+    )
+  }
+
+  <form
+    class="formulario"
+    id={id}
+    method="post"
+    action="/api/enviar.php"
+    data-formulario
+    novalidate
+    aria-labelledby={titulo ? `${id}-titulo` : undefined}
+  >
+    <input type="hidden" name="formulario" value={tipoFormulario} />
+    <input type="hidden" name="pagina" value={Astro.url.pathname} />
+    <input type="hidden" name="t" value="" />
+
+    <!-- Campo trampa (honeypot): fuera de pantalla, fuera del orden de tabulación y oculto a lectores de pantalla.
+         Una persona no lo ve ni lo rellena; un bot sí. Si llega con contenido, el servidor descarta el mensaje. -->
+    <div class="trampa" aria-hidden="true">
+      <label for={`${id}-web`}>No rellenes este campo</label>
+      <input id={`${id}-web`} name="web" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+
+    <div class="campo">
+      <label for={`${id}-nombre`}>Nombre</label>
+      <input
+        id={`${id}-nombre`}
+        name="nombre"
+        type="text"
+        autocomplete="name"
+        required
+        aria-describedby={`${id}-nombre-error`}
+        data-error="Escribe tu nombre."
+      />
+      <p class="campo__error" id={`${id}-nombre-error`}></p>
+    </div>
+
+    <div class="campo">
+      <label for={`${id}-correo`}>Correo</label>
+      <input
+        id={`${id}-correo`}
+        name="correo"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        required
+        aria-describedby={`${id}-correo-error`}
+        data-error="Escribe tu correo."
+        data-error-formato="Revisa el correo: debe ser como nombre@biblioteca.es."
+      />
+      <p class="campo__error" id={`${id}-correo-error`}></p>
+    </div>
+
+    <div class="campo campo--ultimo">
+      <label for={`${id}-telefono`}>
+        Teléfono <span class="campo__opcional">(opcional)</span>
+      </label>
+      <input id={`${id}-telefono`} name="telefono" type="tel" autocomplete="tel" inputmode="tel" />
+    </div>
+
+    <div class="campo campo--ancho">
+      <label for={`${id}-entidad`}>Biblioteca o entidad</label>
+      <input
+        id={`${id}-entidad`}
+        name="entidad"
+        type="text"
+        autocomplete="organization"
+        required
+        aria-describedby={`${id}-entidad-error`}
+        data-error="Escribe el nombre de tu biblioteca o entidad."
+      />
+      <p class="campo__error" id={`${id}-entidad-error`}></p>
+    </div>
+
+    {
+      completo && (
+        <>
+          <div class="campo">
+            <label for={`${id}-sistema`}>Sistema actual</label>
+            <select
+              id={`${id}-sistema`}
+              name="sistema"
+              required
+              aria-describedby={`${id}-sistema-error`}
+              data-error="Elige tu sistema actual."
+            >
+              <option value="" selected>
+                {SIN_ELEGIR}
+              </option>
+              {completo.sistemas.map((sistema) => (
+                <option value={sistema}>{sistema}</option>
+              ))}
+            </select>
+            <p class="campo__error" id={`${id}-sistema-error`} />
+          </div>
+
+          <div class="campo">
+            <label for={`${id}-registros`}>Número aproximado de registros</label>
+            <select
+              id={`${id}-registros`}
+              name="registros"
+              required
+              aria-describedby={`${id}-registros-error`}
+              data-error="Elige el número aproximado de registros."
+            >
+              <option value="" selected>
+                {SIN_ELEGIR}
+              </option>
+              {completo.registros.map((opcion) => (
+                <option value={opcion}>{opcion}</option>
+              ))}
+            </select>
+            <p class="campo__error" id={`${id}-registros-error`} />
+          </div>
+
+          <div class="campo campo--ultimo">
+            <label for={`${id}-bibliotecas`}>{completo.bibliotecas.leyenda}</label>
+            <select
+              id={`${id}-bibliotecas`}
+              name="bibliotecas"
+              required
+              aria-describedby={`${id}-bibliotecas-error`}
+              data-error="Elige si es una biblioteca o varias."
+            >
+              <option value="" selected>
+                {SIN_ELEGIR}
+              </option>
+              {completo.bibliotecas.opciones.map((opcion) => (
+                <option value={opcion}>{opcion}</option>
+              ))}
+            </select>
+            <p class="campo__error" id={`${id}-bibliotecas-error`} />
+          </div>
+        </>
+      )
+    }
+
+    {
+      completo && (
+        <fieldset class="campo campo--ancho interes">
+          <legend>{completo.intereses.leyenda}</legend>
+          <div class="interes__opciones">
+            {completo.intereses.opciones.map((opcion, i) => (
+              <div class="casilla">
+                <input
+                  id={`${id}-interes-${i + 1}`}
+                  name="interes[]"
+                  type="checkbox"
+                  value={opcion.texto}
+                  data-clave={opcion.clave}
+                />
+                <label for={`${id}-interes-${i + 1}`}>{opcion.texto}</label>
+              </div>
+            ))}
+          </div>
+        </fieldset>
+      )
+    }
+
+    <div class="campo campo--ancho">
+      <label for={`${id}-mensaje`}>{completo ? '¿Qué necesitas?' : 'Mensaje'}</label>
+      <textarea
+        id={`${id}-mensaje`}
+        name="mensaje"
+        rows="5"
+        required
+        aria-describedby={`${id}-mensaje-error`}
+        data-error="Cuéntame en pocas palabras qué necesitas."></textarea>
+      <p class="campo__error" id={`${id}-mensaje-error`}></p>
+    </div>
+
+    <div class="campo campo--ancho">
+      <div class="casilla">
+        <input
+          id={`${id}-privacidad`}
+          name="privacidad"
+          type="checkbox"
+          value="acepto"
+          required
+          aria-describedby={`${id}-privacidad-error`}
+          data-error="Para enviar el formulario, acepta la política de privacidad."
+        />
+        <label for={`${id}-privacidad`}>
+          {partes(aceptacion).map((p) => ('enlace' in p ? <a href={rutaPrivacidad}>{p.enlace}</a> : p.texto))}
+        </label>
+      </div>
+      <p class="campo__error" id={`${id}-privacidad-error`}></p>
+    </div>
+
+    <div class="formulario__pie">
+      <Boton tipo="submit">{boton}</Boton>
+      <p class="formulario__privacidad">
+        {partes(privacidad).map((p) => ('enlace' in p ? <a href={rutaPrivacidad}>{p.enlace}</a> : p.texto))}
+      </p>
+    </div>
+
+    <p class="formulario__estado" role="status" aria-live="polite"></p>
+  </form>
+</div>
+
+<style>
+  .trampa {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .bloque-formulario {
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: var(--color-tinta);
+  }
+
+  .bloque-formulario__cabeza {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .bloque-formulario__titulo {
+    font-size: var(--texto-h3);
+  }
+
+  .bloque-formulario__titulo--h1 {
+    font-size: clamp(2.25rem, 1.5rem + 3vw, 3.5rem); /* 36 → 56 px, como el resto de páginas */
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+  }
+
+  /* Móvil: una columna. Tableta (640 px): dos, y el último campo de cada fila (.campo--ultimo) a todo el ancho,
+     sin campos sueltos. Escritorio (960 px): tres. Entidad y mensaje, siempre a todo el ancho. */
+  .formulario {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .formulario > * {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 640px) {
+    .formulario {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 18px;
+    }
+
+    .formulario > .campo:not(.campo--ancho):not(.campo--ultimo) {
+      grid-column: auto;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .formulario {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .formulario > .campo--ultimo {
+      grid-column: auto;
+    }
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Si una etiqueta ocupa dos líneas, los controles de la fila siguen alineados abajo */
+  .campo > input,
+  .campo > select {
+    margin-top: auto;
+  }
+
+  label,
+  legend {
+    font-size: 0.9375rem; /* 15 px */
+    font-weight: var(--peso-medio);
+  }
+
+  .campo__opcional {
+    font-weight: var(--peso-normal);
+    color: var(--color-texto-3);
+  }
+
+  /* Campos: blanco, borde de 1 px (3,8:1 sobre blanco, 3,5:1 sobre papel), radio 4 px.
+     Los estados que piden 2 px suman 1 px por dentro con box-shadow: el campo no cambia de tamaño. */
+  input:not([type='checkbox']),
+  select,
+  textarea {
+    width: 100%;
+    min-height: var(--objetivo-tactil);
+    padding: 12px 14px;
+    border: 1px solid var(--color-borde-campo);
+    border-radius: var(--radio-boton);
+    background: var(--color-blanco);
+    color: var(--color-tinta);
+    font: inherit;
+    font-size: 1rem; /* 16 px: evita el zoom automático de iOS */
+  }
+
+  textarea {
+    resize: vertical;
+  }
+
+  input:not([type='checkbox']):hover,
+  select:hover,
+  textarea:hover {
+    border-color: var(--color-tinta);
+  }
+
+  /* Foco: borde verde de 2 px y el anillo de foco general (global.css) */
+  input:not([type='checkbox']):focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    border-color: var(--color-marca);
+    box-shadow: inset 0 0 0 1px var(--color-marca);
+  }
+
+  /* Error: borde de 2 px en --color-error, también con el foco dentro (el anillo sigue en verde) */
+  [aria-invalid='true']:not([type='checkbox']),
+  [aria-invalid='true']:not([type='checkbox']):hover,
+  [aria-invalid='true']:not([type='checkbox']):focus-visible {
+    border-color: var(--color-error);
+    box-shadow: inset 0 0 0 1px var(--color-error);
+  }
+
+  .campo__error {
+    color: var(--color-error);
+    font-size: 0.9375rem;
+    font-weight: var(--peso-medio);
+  }
+
+  .campo__error:empty {
+    display: none;
+  }
+
+  .trampa {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  /* «¿Qué te interesa?»: fieldset sin borde; casillas en una columna (móvil) y en dos desde 640 px */
+  .interes {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .interes legend {
+    padding: 0;
+    margin-bottom: 6px;
+  }
+
+  .interes__opciones {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 18px;
+  }
+
+  @media (min-width: 640px) {
+    .interes__opciones {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Casilla de privacidad: 24 px, y toda la fila (44 px de alto) responde al toque */
+  .casilla {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: var(--objetivo-tactil);
+  }
+
+  .casilla input {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+    accent-color: var(--color-tinta);
+    cursor: pointer;
+  }
+
+  .casilla input[aria-invalid='true'] {
+    outline: 2px solid var(--color-error);
+    outline-offset: 2px;
+  }
+
+  .casilla input[aria-invalid='true']:focus-visible {
+    outline-color: var(--color-marca);
+  }
+
+  .casilla label {
+    font-weight: var(--peso-normal);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  /* Botón principal (marca, 19 px en negrita) a la izquierda y, debajo, el texto legal */
+  .formulario__pie {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .formulario__privacidad {
+    font-size: var(--texto-pequeno);
+    color: var(--color-texto-3);
+  }
+
+  .formulario__estado:empty {
+    display: none;
+  }
+
+  .formulario__estado {
+    padding: 12px 14px;
+    border-left: 4px solid var(--color-marca);
+    background: var(--color-blanco);
+  }
+</style>
+
+<script>
+  // Validación en el navegador antes de enviar (el servidor vuelve a validar siempre). Si todo es válido, el
+  // formulario se envía de forma normal (POST a /api/enviar.php); este script no envía nada por su cuenta.
+  type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+  const mensajeDe = (control: Control) => {
+    if (control.validity.valueMissing) return control.dataset.error ?? '';
+    if (control.validity.typeMismatch) return control.dataset.errorFormato ?? control.dataset.error ?? '';
+    return '';
+  };
+
+  const comprobar = (control: Control) => {
+    const mensaje = mensajeDe(control);
+    const salida = document.getElementById(control.getAttribute('aria-describedby') ?? '');
+    if (salida) salida.textContent = mensaje;
+    if (mensaje) control.setAttribute('aria-invalid', 'true');
+    else control.removeAttribute('aria-invalid');
+    return !mensaje;
+  };
+
+  // Preselección: ?servicio=<clave> marca la casilla con esa clave. Sin parámetro o con uno no válido, nada.
+  const servicio = new URLSearchParams(location.search).get('servicio');
+  if (servicio) {
+    const casillas = [...document.querySelectorAll<HTMLInputElement>('input[name="interes[]"][data-clave]')];
+    const casilla = casillas.find((c) => c.dataset.clave === servicio);
+    if (casilla) casilla.checked = true;
+  }
+
+  document.querySelectorAll<HTMLFormElement>('form[data-formulario]').forEach((formulario) => {
+    const controles = [...formulario.querySelectorAll<Control>('[data-error]')];
+    const estado = formulario.querySelector('.formulario__estado');
+
+    // Marca de tiempo firmada por el servidor (tiempo mínimo de relleno). Si no llega, el servidor pide confirmar
+    // el envío con un segundo clic, así que no hace falta reintentar ni avisar.
+    const marca = formulario.elements.namedItem('t') as HTMLInputElement | null;
+    if (marca && !marca.value) {
+      fetch('/api/enviar.php?token=1', { cache: 'no-store', credentials: 'same-origin' })
+        .then((respuesta) => (respuesta.ok ? respuesta.json() : null))
+        .then((datos) => {
+          if (datos && typeof datos.t === 'string' && !marca.value) marca.value = datos.t;
+        })
+        .catch(() => {});
+    }
+
+    // Un campo marcado con error se vuelve a comprobar mientras se corrige
+    controles.forEach((control) => {
+      const alCambiar = () => {
+        if (control.getAttribute('aria-invalid') === 'true') comprobar(control);
+      };
+      control.addEventListener('input', alCambiar);
+      control.addEventListener('change', alCambiar);
+    });
+
+    formulario.addEventListener('submit', (evento) => {
+      // Campo trampa relleno: es un bot; se descarta sin avisar
+      if ((formulario.elements.namedItem('web') as HTMLInputElement | null)?.value) {
+        evento.preventDefault();
+        return;
+      }
+      const validos = controles.map(comprobar);
+      const primero = controles[validos.indexOf(false)];
+      if (primero) {
+        evento.preventDefault();
+        if (estado) estado.textContent = '';
+        primero.focus();
+      }
+      // Todo válido: no se hace preventDefault y el navegador envía el formulario
+    });
+  });
+</script>

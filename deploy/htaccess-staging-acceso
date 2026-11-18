@@ -1,0 +1,7 @@
+# Staging con contraseña (opcional, solo si existen los secretos STAGING_AUTH_*).
+# deploy/preparar.sh pone en AuthUserFile la ruta absoluta del .htpasswd en el servidor.
+AuthType Basic
+AuthName "Staging Entretecas"
+AuthUserFile "__HTPASSWD__"
+Require valid-user
+

@@ -1,0 +1,29 @@
+---
+// Encabezado de sección: etiqueta opcional y titular (h2 por defecto).
+import Etiqueta from './Etiqueta.astro';
+
+interface Props {
+  etiqueta?: string;
+  titular: string;
+  nivel?: 'h1' | 'h2';
+  id?: string;
+}
+
+const { etiqueta, titular, nivel = 'h2', id } = Astro.props;
+const Titular = nivel;
+---
+
+<div class="encabezado-seccion">
+  {etiqueta && <Etiqueta>{etiqueta}</Etiqueta>}
+  <Titular id={id}>{titular}</Titular>
+</div>
+
+<style>
+  .encabezado-seccion {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    max-width: 55rem;
+  }
+</style>

@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import { sitio } from '../data/sitio';
+---
+
+<Base titulo={`Página no encontrada · ${sitio.nombre}`} noindex>
+  <section class="contenedor seccion error">
+    <p class="etiqueta">Error 404</p>
+    <h1>Esta página no existe.</h1>
+    <p class="entradilla">Puede que la dirección haya cambiado. Desde la portada llegas a todo lo demás.</p>
+    <p><a class="boton" href="/">Ir a la portada</a></p>
+  </section>
+</Base>
+
+<style>
+  .error {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-3);
+  }
+</style>

@@ -1,0 +1,53 @@
+---
+// Tarjeta de caso: toda la tarjeta es un solo enlace, con el nombre del centro como nombre accesible.
+// Filete de acento, categoría (sistema y tipo de centro), centro, resumen y «Ver caso →» abajo.
+// Estilos comunes de tarjeta enlazada: .tarjeta-enlace en global.css.
+import Filete from './Filete.astro';
+import { idDe } from '../data/sitio';
+
+interface Props {
+  categoria: string;
+  nombre: string;
+  texto: string;
+  ruta: string;
+}
+
+const { categoria, nombre, texto, ruta } = Astro.props;
+const idNombre = `caso-${idDe(nombre)}`;
+---
+
+<a class="tarjeta-enlace tarjeta-caso" href={ruta} aria-labelledby={idNombre}>
+  <Filete />
+  <p class="tarjeta-caso__categoria">{categoria}</p>
+  <h3 id={idNombre} class="tarjeta-caso__nombre">{nombre}</h3>
+  <p class="tarjeta-caso__texto">{texto}</p>
+  <span class="tarjeta-enlace__ver" aria-hidden="true"
+    ><span class="tarjeta-enlace__ver-texto">Ver caso</span>&nbsp;<span class="tarjeta-enlace__ver-flecha">→</span></span
+  >
+</a>
+
+<style>
+  .tarjeta-caso {
+    gap: 12px;
+    padding: 32px;
+  }
+
+  .tarjeta-caso__categoria {
+    margin-top: 6px;
+    font-size: var(--texto-minimo);
+    font-weight: var(--peso-medio);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-texto-3);
+  }
+
+  .tarjeta-caso__nombre {
+    font-size: 1.3125rem; /* 21 px */
+    letter-spacing: -0.01em;
+  }
+
+  .tarjeta-caso__texto {
+    font-size: 1rem;
+    color: var(--color-texto-2);
+  }
+</style>

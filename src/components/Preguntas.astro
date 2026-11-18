@@ -1,0 +1,78 @@
+---
+// Preguntas frecuentes: <details> nativo (funciona sin JavaScript), «+» en color de marca que gira al abrir.
+import EncabezadoSeccion from './EncabezadoSeccion.astro';
+import { enLinea } from '../data/texto';
+
+interface Props {
+  id: string;
+  etiqueta?: string;
+  titular: string;
+  preguntas: { pregunta: string; respuesta: string }[];
+}
+
+const { id, etiqueta, titular, preguntas } = Astro.props;
+---
+
+<EncabezadoSeccion id={id} etiqueta={etiqueta} titular={titular} />
+<div class="preguntas">
+  {
+    preguntas.map(({ pregunta, respuesta }) => (
+      <details class="pregunta">
+        <summary>
+          <span>{pregunta}</span>
+          <span class="pregunta__signo" aria-hidden="true">+</span>
+        </summary>
+        <p set:html={enLinea(respuesta)} />
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  .preguntas {
+    border-top: var(--borde);
+    max-width: 52rem;
+  }
+
+  .pregunta {
+    border-bottom: var(--borde);
+  }
+
+  .pregunta summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    min-height: var(--objetivo-tactil);
+    padding-block: 18px;
+    font-size: 1.1875rem; /* 19 px */
+    font-weight: var(--peso-negrita);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .pregunta summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .pregunta__signo {
+    flex: none;
+    font-size: 1.625rem;
+    font-weight: var(--peso-normal);
+    line-height: 1;
+    color: var(--color-marca);
+    transition: transform 0.15s ease-out;
+  }
+
+  .pregunta[open] .pregunta__signo {
+    transform: rotate(45deg);
+  }
+
+  .pregunta p {
+    padding-bottom: 22px;
+    font-size: var(--texto-base);
+    line-height: 1.65;
+    color: var(--color-texto-2);
+    max-width: 46rem;
+  }
+</style>

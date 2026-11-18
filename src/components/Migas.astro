@@ -1,0 +1,63 @@
+---
+// Ruta de navegación («Inicio / Servicios / Diagnóstico»). La última miga es la página actual, sin enlace.
+import * as datosEstructurados from '../data/datos-estructurados';
+
+interface Props {
+  migas: { texto: string; ruta?: string }[];
+}
+const { migas } = Astro.props;
+
+// BreadcrumbList (JSON-LD): Inicio + cada miga; la última, la página actual
+const urlActual = new URL(Astro.url.pathname, Astro.site).href;
+const datosMigas = datosEstructurados.migas([
+  { nombre: 'Inicio', url: new URL('/', Astro.site).href },
+  ...migas.map((miga, i) => ({
+    nombre: miga.texto,
+    url: i === migas.length - 1 || !miga.ruta ? urlActual : new URL(miga.ruta, Astro.site).href,
+  })),
+]);
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(datosMigas)} />
+
+<nav class="migas" aria-label="Ruta">
+  <ol>
+    <li><a href="/">Inicio</a></li>
+    {
+      migas.map((miga) => (
+        <li>{miga.ruta ? <a href={miga.ruta}>{miga.texto}</a> : <span aria-current="page">{miga.texto}</span>}</li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .migas ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--texto-pequeno);
+    color: var(--color-texto-3);
+  }
+
+  .migas li + li::before {
+    content: '/';
+    margin-right: 8px;
+    color: var(--color-texto-3);
+  }
+
+  .migas a {
+    display: inline-block;
+    padding-block: 12px; /* objetivo táctil con la línea de texto */
+    color: var(--color-texto-3);
+  }
+
+  .migas span {
+    display: inline-block;
+    padding-block: 12px;
+    color: var(--color-tinta);
+  }
+</style>

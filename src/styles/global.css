@@ -1,0 +1,474 @@
+@import './tokens.css';
+
+/* Literata variable alojada en la propia web (src/assets/fonts/literata-opsz.woff2): solo latino, pesos 400-700 y
+   eje óptico; se regenera con scripts/subconjunto-fuente.sh. font-display: swap + fuente de reserva ajustada
+   (size-adjust y overrides calculados sobre el texto real del sitio, contra Georgia) para que el cambio de fuente
+   no mueva nada (CLS 0). En Windows/Android sin Georgia cae a Times New Roman/serif, con un ajuste menos fino. */
+@font-face {
+  font-family: 'Literata';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/literata-opsz.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Literata Reserva';
+  font-style: normal;
+  font-weight: 400 600;
+  src: local('Georgia');
+  size-adjust: 109.3%;
+  ascent-override: 107.7%;
+  descent-override: 28.2%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Literata Reserva';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Georgia Bold'), local('Georgia-Bold');
+  size-adjust: 99.3%;
+  ascent-override: 118.5%;
+  descent-override: 31%;
+  line-gap-override: 0%;
+}
+
+/* Marca de esta web: un solo color, el del logo (decisión de Rai, 2026-11-06).
+   Como texto solo va en tamaño grande (≥ 19 px en negrita o ≥ 24 px), donde basta 3:1; en lo demás,
+   en elementos gráficos (subrayados, foco, viñetas, filetes, bordes, cuadrados de etiqueta). */
+:root {
+  --color-marca: var(--color-entretecas);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Anclas (#diagnostico, #pedir, las de casos…): que no las tape la cabecera fija */
+[id] {
+  scroll-margin-top: calc(var(--alto-cabecera) + var(--espacio-2));
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-family: var(--fuente);
+  font-size: var(--texto-base);
+  font-weight: var(--peso-normal);
+  line-height: var(--interlineado-texto);
+  font-optical-sizing: auto;
+}
+
+main {
+  flex: 1;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: var(--peso-negrita);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--texto-h1);
+  letter-spacing: var(--interletraje-h1);
+  line-height: var(--interlineado-titular);
+}
+
+h2 {
+  font-size: var(--texto-h2);
+  letter-spacing: var(--interletraje-h2);
+  line-height: 1.15;
+}
+
+h3 {
+  font-size: var(--texto-h3);
+  line-height: 1.3;
+}
+
+p {
+  margin: 0;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Enlaces: texto en tinta y subrayado en color de marca. Al pasar el ratón, el subrayado engorda;
+   el texto sigue en tinta. El color de marca nunca va en el texto (no llega a 4,5:1 en todas las
+   marcas); sí en elementos gráficos (subrayados, viñetas, iconos, filetes, bordes), que piden 3:1. */
+a {
+  color: var(--color-tinta);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-marca);
+  text-decoration-thickness: var(--subrayado);
+  text-underline-offset: var(--subrayado-separacion);
+}
+
+a:hover {
+  color: var(--color-tinta);
+  text-decoration-thickness: var(--subrayado-hover);
+}
+
+:focus-visible {
+  outline: var(--foco);
+  outline-offset: var(--foco-separacion);
+}
+
+/* Enlace con flecha («Ver el servicio →»): texto en tinta, flecha en color de marca.
+   Componente: src/components/EnlaceFlecha.astro */
+.enlace-flecha {
+  display: inline-block;
+  padding-block: 10px; /* objetivo táctil de 44 px con la línea de texto */
+  font-weight: var(--peso-negrita);
+  text-decoration: none;
+}
+
+.enlace-flecha__texto {
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-marca);
+  text-decoration-thickness: var(--subrayado);
+  text-underline-offset: var(--subrayado-separacion);
+}
+
+.enlace-flecha:hover .enlace-flecha__texto {
+  text-decoration-thickness: var(--subrayado-hover);
+}
+
+/* La flecha va pegada a la última palabra: nunca se queda sola en otra línea */
+.enlace-flecha__flecha {
+  display: inline-block;
+  color: var(--color-marca);
+  transition: transform 0.15s ease-out;
+}
+
+.enlace-flecha:hover .enlace-flecha__flecha {
+  transform: translateX(3px);
+}
+
+/* Filete de acento: 4 × 56 px, extremos redondeados, en color de marca, encima del contenido y
+   alineado con el texto. El único acento de las tarjetas (servicio, caso) y de los bloques de texto
+   sin caja. Componente: src/components/Filete.astro */
+.filete {
+  display: block;
+  flex: none;
+  width: var(--filete-ancho);
+  height: var(--filete-alto);
+  border-radius: 2px;
+  background: var(--color-marca);
+}
+
+/* Tarjeta enlazada (servicio, caso): toda la tarjeta es el enlace. Radio de 6 px y borde gris; al pasar
+   el ratón o con foco, el borde pasa al color de marca. Sin sombras. */
+.tarjeta-enlace {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: 100%;
+  background: var(--color-blanco);
+  border: var(--borde);
+  border-radius: var(--radio-tarjeta);
+  color: var(--color-tinta);
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease-out,
+    transform 0.2s ease-out;
+}
+
+/* Ratón o teclado: borde en color de marca y una elevación ligera (sin sombras) */
+.tarjeta-enlace:hover,
+.tarjeta-enlace:focus-visible {
+  border-color: var(--color-marca);
+  color: var(--color-tinta);
+  transform: translateY(-3px);
+}
+
+/* Pie de la tarjeta enlazada («Ver servicio →»): aspecto de enlace con flecha, en una sola línea */
+.tarjeta-enlace__ver {
+  margin-top: auto;
+  padding-top: 6px;
+  font-weight: var(--peso-negrita);
+  white-space: nowrap;
+}
+
+.tarjeta-enlace__ver-texto {
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-marca);
+  text-decoration-thickness: var(--subrayado);
+  text-underline-offset: var(--subrayado-separacion);
+}
+
+.tarjeta-enlace:hover .tarjeta-enlace__ver-texto {
+  text-decoration-thickness: var(--subrayado-hover);
+}
+
+.tarjeta-enlace__ver-flecha {
+  display: inline-block;
+  color: var(--color-marca);
+  transition: transform 0.15s ease-out;
+}
+
+.tarjeta-enlace:hover .tarjeta-enlace__ver-flecha {
+  transform: translateX(3px);
+}
+
+/* Viñetas de lista en color de marca (elemento gráfico) */
+.lista-marca li::marker {
+  color: var(--color-marca);
+}
+
+/* Sobre fondo de marca, todo en papel (BRIEF §4), incluido el foco */
+.fondo-marca {
+  background: var(--color-marca);
+  color: var(--color-papel);
+  /* --foco se resuelve en :root: hay que redefinirlo entero, no basta con --foco-color */
+  --foco-color: var(--color-papel);
+  --foco: 2px solid var(--color-papel);
+}
+
+.fondo-marca a,
+.fondo-marca a:hover,
+.fondo-marca .enlace-flecha__texto,
+.fondo-marca .enlace-flecha__flecha {
+  color: var(--color-papel);
+  text-decoration-color: var(--color-papel);
+}
+
+/* Etiqueta sobre fondo de marca: texto y cuadrado en papel (el cuadrado en color de marca no se vería) */
+.fondo-marca .etiqueta {
+  color: var(--color-papel);
+}
+
+.fondo-marca .etiqueta::before {
+  background: var(--color-papel);
+}
+
+.fondo-tinta {
+  background: var(--color-tinta);
+  color: var(--color-papel);
+}
+
+/* Sobre tinta: texto en papel; el subrayado, el foco y los detalles siguen en color de marca
+   (verde sobre tinta: 3,9:1, válido para elementos gráficos) */
+.fondo-tinta a {
+  color: var(--color-papel);
+}
+
+.fondo-tinta .etiqueta {
+  color: var(--color-papel);
+}
+
+.fondo-blanco {
+  background: var(--color-blanco);
+  border-block: var(--borde);
+}
+
+/* Contenedor: 1200 px de ancho máximo y 24 px de margen lateral */
+.contenedor {
+  width: 100%;
+  max-width: var(--ancho-max);
+  margin-inline: auto;
+  padding-inline: var(--margen-lateral);
+}
+
+.seccion {
+  padding-block: var(--espacio-seccion);
+}
+
+/* Etiqueta sobre los titulares: texto en tinta y un cuadrado pequeño en color de marca delante */
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--texto-pequeno);
+  font-weight: var(--peso-medio);
+  letter-spacing: var(--interletraje-etiqueta);
+  text-transform: uppercase;
+  color: var(--color-tinta);
+}
+
+.etiqueta::before {
+  content: '';
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--color-marca);
+}
+
+.entradilla {
+  font-size: var(--texto-entradilla);
+  color: var(--color-texto-2);
+  max-width: 38em;
+}
+
+/* Botón con fondo de marca: texto de 19 px en negrita como mínimo. A ese tamaño cuenta como texto
+   grande y basta 3:1 (blanco sobre #2E8A6C da 4,23:1; sobre #D4552B, 4,02:1). No bajar de 19 px. */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espacio-1);
+  min-height: var(--objetivo-tactil);
+  padding: 10px 22px;
+  border-radius: var(--radio-boton);
+  background: var(--color-marca);
+  color: var(--color-blanco);
+  border: 0;
+  font-family: inherit;
+  font-size: var(--texto-boton);
+  font-weight: var(--peso-negrita);
+  line-height: 1.3;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.boton:hover {
+  background: var(--color-tinta);
+  color: var(--color-papel);
+}
+
+/* Botón en tinta: texto en papel (16,3:1), vale a cualquier tamaño. Para sitios donde 19 px no cabe
+   y para botones sobre blanco que no deben llevar color de marca. */
+.boton--tinta {
+  background: var(--color-tinta);
+  color: var(--color-papel);
+  font-size: var(--texto-base);
+}
+
+.boton--tinta:hover {
+  background: var(--color-texto-2);
+  color: var(--color-papel);
+}
+
+.boton:hover,
+.boton:focus-visible {
+  text-decoration: none;
+}
+
+/* Botón secundario: borde y texto en tinta, sin color de marca */
+.boton--borde {
+  background: transparent;
+  color: var(--color-tinta);
+  box-shadow: inset 0 0 0 1.5px var(--color-tinta);
+  font-weight: var(--peso-medio);
+}
+
+.boton--borde:hover {
+  background: var(--color-tinta);
+  color: var(--color-papel);
+}
+
+/* Botón en papel, para bandas oscuras o de color */
+.boton--papel,
+.fondo-tinta .boton--papel,
+.fondo-marca .boton--papel {
+  background: var(--color-papel);
+  color: var(--color-tinta);
+  font-size: var(--texto-base);
+}
+
+.boton--papel:hover,
+.fondo-tinta .boton--papel:hover,
+.fondo-marca .boton--papel:hover {
+  background: var(--color-linea);
+  color: var(--color-tinta);
+}
+
+.tarjeta {
+  border-radius: var(--radio-tarjeta);
+}
+
+/* Rejilla que se adapta sola: tantas columnas de al menos --min como quepan */
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--min, 320px), 100%), 1fr));
+  gap: var(--espacio-3);
+}
+
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.saltar {
+  position: absolute;
+  left: var(--espacio-2);
+  top: -100px;
+  z-index: 10;
+  padding: 12px 20px;
+  background: var(--color-tinta);
+  color: var(--color-papel);
+  font-weight: var(--peso-negrita);
+}
+
+.saltar:focus {
+  top: var(--espacio-2);
+  color: var(--color-papel);
+  text-decoration: none;
+}
+
+/* Aparición al entrar en pantalla (src/components/Revela.astro). El script solo oculta (.revela) lo que está
+   por debajo de la primera pantalla y, al verse, añade .visto; después quita ambas clases. Sin JavaScript, o con
+   movimiento reducido, no se oculta nada. Solo opacity y transform: no provocan saltos de maquetación. */
+.revela {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.revela.visto {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.4s ease-out,
+    transform 0.4s ease-out;
+}
+
+/* Tarjetas que no son enlaces (planes, casos): misma respuesta al ratón y al foco dentro de ellas */
+.tarjeta-plan,
+.caso {
+  transition: transform 0.2s ease-out;
+}
+
+.tarjeta-plan:hover,
+.tarjeta-plan:focus-within,
+.caso:hover,
+.caso:focus-within {
+  transform: translateY(-3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

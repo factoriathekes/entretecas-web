@@ -1,0 +1,152 @@
+---
+// /casos/, de diseno/entretecas-casos.html. Contenido: src/content/paginas/casos.md.
+// Cada caso lleva su ancla (#agustinianas, #colegio-estudio…), la que usan las tarjetas de la portada.
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import CabezaPagina from '../components/CabezaPagina.astro';
+import Seccion from '../components/Seccion.astro';
+import Filete from '../components/Filete.astro';
+import Boton from '../components/Boton.astro';
+import Cita from '../components/Cita.astro';
+import BloqueCTA from '../components/BloqueCTA.astro';
+import { rellenar } from '../data/sitio';
+import { enLinea } from '../data/texto';
+
+const entrada = await getEntry('casos', 'casos');
+if (!entrada) throw new Error('Falta src/content/paginas/casos.md');
+const d = entrada.data;
+const mostrarConfian = d.confian.visible && d.confian.centros.length > 0;
+---
+
+<Base titulo={d.titulo} descripcion={d.descripcion}>
+  <CabezaPagina migas={[{ texto: d.etiqueta ?? d.h1 }]} etiqueta={d.etiqueta} h1={d.h1} entradilla={d.entradilla}>
+    {d.nota && <p class="nota">{rellenar(d.nota)}</p>}
+  </CabezaPagina>
+
+  <Seccion fondo="blanco">
+    <div class="casos">
+      {
+        d.casos.map((caso) => (
+          <article id={caso.ancla} class="caso tarjeta" aria-labelledby={`${caso.ancla}-nombre`}>
+            <Filete />
+            <div class="caso__cabeza">
+              <h2 id={`${caso.ancla}-nombre`} class="caso__nombre">{caso.nombre}</h2>
+              <p class="caso__categoria">{caso.categoria}</p>
+            </div>
+            <dl class="caso__apartados">
+              <div>
+                <dt>{d.apartados.reto}</dt>
+                <dd set:html={enLinea(caso.reto)} />
+              </div>
+              <div>
+                <dt>{d.apartados.hicimos}</dt>
+                <dd set:html={enLinea(caso.hicimos)} />
+              </div>
+              <div>
+                <dt>{d.apartados.resultado}</dt>
+                <dd set:html={enLinea(caso.resultado)} />
+              </div>
+            </dl>
+            {caso.cita && <Cita {...caso.cita} />}
+          </article>
+        ))
+      }
+    </div>
+  </Seccion>
+
+  {
+    mostrarConfian && (
+      <Seccion etiquetadaPor="confian-titular">
+        <h2 id="confian-titular" class="confian__titular">{d.confian.titular}</h2>
+        <ul class="confian" role="list">
+          {d.confian.centros.map((centro) => (
+            <li>{centro}</li>
+          ))}
+        </ul>
+      </Seccion>
+    )
+  }
+
+  <BloqueCTA id="empezar" titular={d.cta.titular}>
+    <p>{rellenar(d.cta.texto)}</p>
+    <p><Boton href={d.cta.boton.ruta}>{d.cta.boton.texto}</Boton></p>
+  </BloqueCTA>
+</Base>
+
+<style>
+  .nota {
+    font-size: 0.9375rem;
+    color: var(--color-texto-3);
+  }
+
+  .casos {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espacio-4);
+  }
+
+  .caso {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: clamp(28px, 4vw, 44px);
+    background: var(--color-blanco);
+    border: var(--borde);
+    scroll-margin-top: calc(var(--alto-cabecera) + var(--espacio-2));
+  }
+
+  .caso__cabeza {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .caso__nombre {
+    font-size: clamp(1.5rem, 1.25rem + 1vw, 1.875rem); /* 24 → 30 px */
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+
+  .caso__categoria {
+    font-size: var(--texto-minimo);
+    font-weight: var(--peso-medio);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-texto-3);
+  }
+
+  .caso__apartados {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 24px 36px;
+    margin: 0;
+  }
+
+  .caso__apartados dt {
+    margin-bottom: 8px;
+    font-size: 1.0625rem;
+    font-weight: var(--peso-negrita);
+  }
+
+  .caso__apartados dd {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-texto-2);
+  }
+
+  .confian__titular {
+    font-size: var(--texto-h3);
+  }
+
+  .confian {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 1.0625rem;
+    color: var(--color-texto-2);
+  }
+</style>

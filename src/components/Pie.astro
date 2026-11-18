@@ -1,0 +1,76 @@
+---
+// Pie: logo completo (con «una marca de thekes»), enlaces legales y titular.
+import Logo from '../assets/logos/entretecas-completo-color.svg';
+import { sitio } from '../data/sitio';
+
+const ano = new Date().getFullYear();
+---
+
+<footer class="pie">
+  <div class="contenedor pie__fila">
+    <a class="pie__logo" href="/" aria-label={`${sitio.nombre}, una marca de Thekes. Portada`}>
+      <Logo aria-hidden="true" />
+    </a>
+
+    <nav aria-label="Legal">
+      <ul class="pie__legal">
+        {
+          sitio.legal.map((enlace) => (
+            <li>
+              <a href={enlace.ruta}>{enlace.texto}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <p class="pie__titular">© {ano} {sitio.titular.nombreComercial}</p>
+  </div>
+</footer>
+
+<style>
+  .pie {
+    background: var(--color-papel);
+    border-top: var(--borde);
+  }
+
+  .pie__fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding-block: 40px;
+  }
+
+  .pie__logo {
+    display: inline-flex;
+    text-decoration: none;
+  }
+
+  .pie__logo svg {
+    height: 52px;
+    width: auto;
+  }
+
+  .pie__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--texto-pequeno);
+  }
+
+  .pie__legal a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--objetivo-tactil);
+  }
+
+  .pie__titular {
+    font-size: var(--texto-minimo);
+    color: var(--color-texto-3);
+  }
+</style>

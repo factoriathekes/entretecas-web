@@ -1,0 +1,648 @@
+# Pages CMS (https://app.pagescms.org): edición desde el navegador de los textos y de src/data/sitio.json.
+# Trabajar SIEMPRE en la rama «staging» (selector de rama de Pages CMS): cada cambio publica en
+# staging.entretecas.com; a producción solo llega con el lanzamiento manual del workflow desde main.
+# Los campos repiten los esquemas de src/content.config.ts y src/data/sitio.ts: si cambia uno, cambiar los dos.
+
+media:
+  input: public/imagenes
+  output: /imagenes
+
+content:
+  - name: portada
+    label: Portada
+    type: file
+    path: src/content/portada/portada.md
+    format: yaml-frontmatter
+    # Los textos admiten {anos}, {bibliotecas}, {correo}, {diagnosticoDesde}, {permanenciaMeses} y
+    # {respuestaContacto}: se rellenan con «Datos de la web». No escribir esas cifras a mano.
+    fields:
+      - { name: titulo, label: Título para buscadores, type: string, required: true }
+      - { name: descripcion, label: Descripción para buscadores, type: text, required: true }
+      - name: hero
+        label: Portada (primer bloque)
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string, required: true }
+          - { name: titular, label: Titular, type: text, required: true }
+          - { name: entradilla, label: Entradilla, type: text, required: true }
+          - name: botonPrincipal
+            label: Botón principal
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - { name: ruta, label: "Ruta (/…/, #ancla o https://…)", type: string, required: true }
+          - name: botonSecundario
+            label: Botón secundario
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - { name: ruta, label: "Ruta (/…/, #ancla o https://…)", type: string, required: true }
+          - { name: nota, label: Nota bajo los botones, type: string, required: true }
+      - name: idiomas
+        label: Los dos idiomas
+        type: object
+        fields:
+          - { name: titular, label: Titular, type: text, required: true }
+          - name: puntos
+            label: Puntos
+            type: object
+            list: true
+            fields:
+              - { name: titulo, label: Título, type: string, required: true }
+              - { name: texto, label: Texto, type: text, required: true }
+      - name: servicios
+        label: Servicios
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string, required: true }
+          - { name: titular, label: Titular, type: string, required: true }
+          - name: tarjetas
+            label: Tarjetas
+            type: object
+            list: true
+            fields:
+              - { name: nombre, label: Nombre, type: string, required: true }
+              - { name: texto, label: Texto, type: text, required: true }
+              - { name: ruta, label: "Ruta de la página del servicio (/…/); el texto «Ver servicio →» es fijo", type: string, required: true }
+          - name: llamada
+            label: Tarjeta final «¿No sabes por dónde empezar?»
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - name: boton
+                label: Botón
+                type: object
+                fields:
+                  - { name: texto, label: Texto, type: string, required: true }
+                  - { name: ruta, label: "Ruta (/…/, #ancla o https://…)", type: string, required: true }
+      - name: planes
+        label: Planes gestionados
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string, required: true }
+          - { name: titular, label: Titular, type: string, required: true }
+          - name: planes
+            label: Planes
+            type: object
+            list: true
+            fields:
+              - { name: nombre, label: Nombre, type: string, required: true }
+              - { name: lema, label: Lema, type: string, required: true }
+              - { name: destacado, label: Destacado, type: boolean }
+              - { name: puntos, label: Qué incluye, type: string, list: true, required: true }
+          - { name: nota, label: Nota, type: text, required: true }
+          - name: boton
+            label: Botón
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - { name: ruta, label: "Ruta (/…/, #ancla o https://…)", type: string, required: true }
+      - name: proceso
+        label: Cómo trabajamos
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string, required: true }
+          - { name: titular, label: Titular, type: string, required: true }
+          - name: pasos
+            label: Pasos (el número se pone solo)
+            type: object
+            list: true
+            fields:
+              - { name: titulo, label: Título, type: string, required: true }
+              - { name: texto, label: Texto, type: text, required: true }
+      - name: casos
+        label: Casos
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string, required: true }
+          - { name: titular, label: Titular, type: string, required: true }
+          - name: casos
+            label: Casos
+            type: object
+            list: true
+            fields:
+              - { name: categoria, label: Categoría (sistema · tipo de centro), type: string, required: true }
+              - { name: nombre, label: Centro, type: string, required: true }
+              - { name: texto, label: Texto, type: text, required: true }
+              - { name: ruta, label: "Ruta del caso (/casos/#…); el texto «Ver caso →» es fijo", type: string, required: true }
+          - name: cita
+            label: Testimonio
+            type: object
+            fields:
+              - { name: texto, label: Cita literal (sin comillas), type: text, required: true }
+              - { name: autoria, label: Autoría, type: string, required: true }
+      - name: sobreMi
+        label: Sobre mí
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string, required: true }
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: parrafos, label: Párrafos, type: text, list: true, required: true }
+      - name: contacto
+        label: Bloque final (#diagnostico; a su derecha, «Qué pasa después»)
+        type: object
+        fields:
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: texto, label: Texto, type: text, required: true }
+          - name: boton
+            label: Botón
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - { name: ruta, label: "Ruta (/…/ o https://…)", type: string, required: true }
+
+  - name: servicios
+    label: Servicios
+    type: collection
+    path: src/content/servicios
+    format: yaml-frontmatter
+    # Los textos admiten {anos}, {bibliotecas}, {correo}, {diagnosticoDesde}, {permanenciaMeses}, {respuestaContacto},
+    # {plazoDiagnostico}, {plazoImplantacion}, {plazoImplantacionConMigracion}, **negrita** y [enlace](/ruta/).
+    view:
+      fields: [nombre, orden]
+      sort: [orden]
+    fields:
+      - { name: nombre, label: Nombre del servicio (migas), type: string, required: true }
+      - { name: orden, label: Orden, type: number, required: true }
+      - { name: lema, label: "Lema (frase bajo el titular)", type: string }
+      - { name: titulo, label: Título para buscadores, type: string, required: true }
+      - { name: descripcion, label: Descripción para buscadores, type: text, required: true }
+      - { name: etiqueta, label: Etiqueta sobre el titular, type: string }
+      - { name: h1, label: Titular, type: string, required: true }
+      - { name: entradilla, label: Entradilla (párrafos), type: text, list: true, required: true }
+      - name: boton
+        label: Botón de la cabecera
+        type: object
+        fields:
+          - { name: texto, label: Texto, type: string, required: true }
+          - { name: ruta, label: "Ruta (/…/, #ancla o https://…)", type: string, required: true }
+      - name: precio
+        label: Recuadro de precio
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string, required: true }
+          - { name: antes, label: "Antes de la cifra («Desde»)", type: string }
+          - { name: cifra, label: "Cifra (p. ej. {diagnosticoDesde})", type: string }
+          - { name: despues, label: "Después de la cifra («sin IVA»)", type: string }
+          - { name: texto, label: Texto grande si no hay cifra, type: string }
+          - { name: puntos, label: Puntos, type: text, list: true }
+      - name: secciones
+        label: Secciones (en orden)
+        type: object
+        list: true
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string }
+          - { name: titular, label: Titular, type: string, required: true }
+          - name: tipo
+            label: Tipo de lista
+            type: select
+            options:
+              values: [cuadros, pasos]
+          - { name: puntos, label: Puntos, type: text, list: true }
+          - { name: parrafos, label: Párrafos (después de la lista o la tabla), type: text, list: true }
+          - name: tabla
+            label: Tabla
+            type: object
+            fields:
+              - { name: leyenda, label: Leyenda (para lectores de pantalla), type: string }
+              - { name: columnas, label: Columnas, type: string, list: true }
+              - name: filas
+                label: Filas
+                type: object
+                list: true
+                fields:
+                  - { name: celdas, label: Celdas, type: string, list: true }
+          - { name: mitad, label: Media anchura (dos seguidas comparten banda), type: boolean }
+      - name: cita
+        label: Testimonio (extracto literal; sin comillas)
+        type: object
+        fields:
+          - { name: texto, label: Cita (un párrafo por elemento), type: text, list: true, required: true }
+          - { name: autoria, label: Autoría, type: string, required: true }
+      - name: preguntas
+        label: Preguntas frecuentes
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string }
+          - { name: titular, label: Titular, type: string, required: true }
+          - name: preguntas
+            label: Preguntas
+            type: object
+            list: true
+            fields:
+              - { name: pregunta, label: Pregunta, type: string, required: true }
+              - { name: respuesta, label: Respuesta, type: text, required: true }
+      - name: otros
+        label: Otros servicios (tarjetas de la portada)
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string }
+          - { name: titular, label: Titular, type: string, required: true }
+      - name: cta
+        label: Franja final (titular en verde; texto y botón debajo)
+        type: object
+        fields:
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: texto, label: Texto, type: text, required: true }
+          - name: boton
+            label: Botón (no en el diagnóstico, donde la franja lleva el formulario)
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - { name: ruta, label: "Ruta (/…/, #ancla, ?servicio=… o https://…)", type: string, required: true }
+      - name: formulario
+        label: Formulario completo de la franja final (solo el diagnóstico; ancla #pedir)
+        type: object
+        fields:
+          - { name: sistemas, label: Opciones de «Sistema actual», type: string, list: true, required: true }
+          - { name: registros, label: Opciones de «Número aproximado de registros», type: string, list: true, required: true }
+          - name: bibliotecas
+            label: Bibliotecas
+            type: object
+            fields:
+              - { name: leyenda, label: Pregunta, type: string, required: true }
+              - { name: opciones, label: Opciones, type: string, list: true, required: true }
+          - name: intereses
+            label: "Casillas «¿Qué te interesa?»"
+            type: object
+            fields:
+              - { name: leyenda, label: Leyenda del grupo, type: string, required: true }
+              - name: opciones
+                label: Casillas (la clave es el valor de ?servicio=; vacía si no se preselecciona)
+                type: object
+                list: true
+                fields:
+                  - { name: texto, label: Texto, type: string, required: true }
+                  - { name: clave, label: "Clave de ?servicio= (migracion, implantacion, archivos, plan, formacion)", type: string }
+          - { name: aceptacion, label: "Casilla de privacidad (entre [corchetes], el enlace)", type: string, required: true }
+          - { name: privacidad, label: "Texto legal bajo el botón (entre [corchetes], el enlace)", type: string, required: true }
+          - { name: boton, label: Texto del botón, type: string, required: true }
+
+  - name: planes
+    label: Planes
+    type: file
+    path: src/content/paginas/planes.md
+    format: yaml-frontmatter
+    # Los textos admiten {anos}, {bibliotecas}, {correo}, {diagnosticoDesde}, {permanenciaMeses}, {respuestaContacto},
+    # {plazoDiagnostico}, {plazoImplantacion}, {plazoImplantacionConMigracion}, **negrita** y [enlace](/ruta/).
+    fields:
+      - { name: titulo, label: Título para buscadores, type: string, required: true }
+      - { name: descripcion, label: Descripción para buscadores, type: text, required: true }
+      - { name: etiqueta, label: Etiqueta sobre el titular, type: string }
+      - { name: h1, label: Titular, type: string, required: true }
+      - { name: entradilla, label: Entradilla (párrafos), type: text, list: true, required: true }
+      - name: boton
+        label: Botón de la cabecera
+        type: object
+        fields:
+          - { name: texto, label: Texto, type: string, required: true }
+          - { name: ruta, label: "Ruta (/…/, #ancla, ?servicio=… o https://…)", type: string, required: true }
+      - name: incluye
+        label: Todos los planes incluyen
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string }
+          - { name: titular, label: Titular, type: string, required: true }
+          - name: puntos
+            label: Puntos
+            type: object
+            list: true
+            fields:
+              - { name: titulo, label: Título, type: string, required: true }
+              - { name: texto, label: Texto, type: text, required: true }
+      - name: comparativa
+        label: Comparativa de planes
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string }
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: leyenda, label: Leyenda de la tabla (para lectores de pantalla), type: string, required: true }
+          - name: planes
+            label: Planes (columnas)
+            type: object
+            list: true
+            fields:
+              - { name: nombre, label: Nombre, type: string, required: true }
+              - { name: lema, label: Lema, type: string, required: true }
+              - { name: destacado, label: Destacado, type: boolean }
+          - name: filas
+            label: Filas
+            type: object
+            list: true
+            fields:
+              - { name: concepto, label: Concepto, type: string, required: true }
+              - { name: valores, label: "Valor por plan, en orden («—» = no incluido)", type: string, list: true, required: true }
+          - { name: nota, label: Nota bajo la tabla, type: text, list: true }
+      - name: bloques
+        label: Bloques (sin inversión inicial, catálogos colectivos…)
+        type: object
+        list: true
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string, required: true }
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: parrafos, label: Párrafos, type: text, list: true, required: true }
+          - { name: oscuro, label: Fondo tinta, type: boolean }
+      - name: cita
+        label: Testimonio (extracto literal; sin comillas)
+        type: object
+        fields:
+          - { name: texto, label: Cita (un párrafo por elemento), type: text, list: true, required: true }
+          - { name: autoria, label: Autoría, type: string, required: true }
+      - name: preguntas
+        label: Preguntas frecuentes
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string }
+          - { name: titular, label: Titular, type: string, required: true }
+          - name: preguntas
+            label: Preguntas
+            type: object
+            list: true
+            fields:
+              - { name: pregunta, label: Pregunta, type: string, required: true }
+              - { name: respuesta, label: Respuesta, type: text, required: true }
+      - name: cta
+        label: Franja final (titular en verde; texto y botón debajo)
+        type: object
+        fields:
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: texto, label: Texto, type: text, required: true }
+          - { name: aviso, label: Línea encima del botón (opcional), type: string }
+          - name: boton
+            label: Botón
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - { name: ruta, label: "Ruta (/…/, #ancla, ?servicio=… o https://…)", type: string, required: true }
+
+  - name: casos
+    label: Casos
+    type: file
+    path: src/content/paginas/casos.md
+    format: yaml-frontmatter
+    # Los textos admiten {anos}, {bibliotecas}, {correo}, {diagnosticoDesde}, {permanenciaMeses}, {respuestaContacto},
+    # {plazoDiagnostico}, {plazoImplantacion}, {plazoImplantacionConMigracion}, **negrita** y [enlace](/ruta/).
+    fields:
+      - { name: titulo, label: Título para buscadores, type: string, required: true }
+      - { name: descripcion, label: Descripción para buscadores, type: text, required: true }
+      - { name: etiqueta, label: Etiqueta sobre el titular, type: string }
+      - { name: h1, label: Titular, type: string, required: true }
+      - { name: entradilla, label: Entradilla (párrafos), type: text, list: true, required: true }
+      - { name: nota, label: Nota bajo la entradilla, type: string }
+      - name: apartados
+        label: Nombres de los apartados de cada caso
+        type: object
+        fields:
+          - { name: reto, label: Reto, type: string, required: true }
+          - { name: hicimos, label: Qué hicimos, type: string, required: true }
+          - { name: resultado, label: Resultado, type: string, required: true }
+      - name: casos
+        label: Casos
+        type: object
+        list: true
+        fields:
+          - { name: ancla, label: "Ancla (/casos/#…; la usan las tarjetas de la portada)", type: string, required: true }
+          - { name: nombre, label: Centro, type: string, required: true }
+          - { name: categoria, label: Categoría, type: string, required: true }
+          - { name: reto, label: El reto, type: text, required: true }
+          - { name: hicimos, label: Qué hicimos, type: text, required: true }
+          - { name: resultado, label: El resultado, type: text, required: true }
+          - name: cita
+            label: Testimonio completo
+            type: object
+            fields:
+              - { name: texto, label: Cita (un párrafo por elemento), type: text, list: true }
+              - { name: autoria, label: Autoría, type: string }
+      - name: confian
+        label: También confían en Entretecas
+        type: object
+        fields:
+          - { name: visible, label: Mostrar (necesita al menos un centro), type: boolean }
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: centros, label: Centros, type: string, list: true }
+      - name: cta
+        label: Franja final (titular en verde; texto y botón debajo)
+        type: object
+        fields:
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: texto, label: Texto, type: text, required: true }
+          - name: boton
+            label: Botón
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - { name: ruta, label: "Ruta (/…/, #ancla o https://…)", type: string, required: true }
+
+  - name: sobreMi
+    label: Sobre mí
+    type: file
+    path: src/content/paginas/sobre-mi.md
+    format: yaml-frontmatter
+    # Los textos admiten {anos}, {bibliotecas}, {correo}, {diagnosticoDesde}, {permanenciaMeses}, {respuestaContacto},
+    # {plazoDiagnostico}, {plazoImplantacion}, {plazoImplantacionConMigracion}, **negrita** y [enlace](/ruta/).
+    fields:
+      - { name: titulo, label: Título para buscadores, type: string, required: true }
+      - { name: descripcion, label: Descripción para buscadores, type: text, required: true }
+      - { name: etiqueta, label: Etiqueta sobre el titular, type: string }
+      - { name: h1, label: Titular, type: string, required: true }
+      - { name: entradilla, label: Entradilla (párrafos), type: text, list: true, required: true }
+      - name: boton
+        label: Botón de la cabecera
+        type: object
+        fields:
+          - { name: texto, label: Texto, type: string, required: true }
+          - { name: ruta, label: "Ruta (/…/, #ancla o https://…)", type: string, required: true }
+      - name: foto
+        label: Fotografía
+        type: object
+        fields:
+          - { name: alt, label: Persona de la foto (texto alternativo), type: string, required: true }
+          - { name: imagen, label: Imagen (vacío = hueco reservado), type: image }
+      - name: como
+        label: Cómo trabajo
+        type: object
+        fields:
+          - { name: etiqueta, label: Etiqueta, type: string }
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: puntos, label: "Puntos (**inicio en negrita.** resto)", type: text, list: true, required: true }
+      - name: columnas
+        label: Columnas (dónde trabajo, Entretecas y Thekes)
+        type: object
+        list: true
+        fields:
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: parrafos, label: Párrafos, type: text, list: true, required: true }
+          - name: enlace
+            label: Enlace con flecha
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string }
+              - { name: ruta, label: "Ruta (/…/ o https://…)", type: string }
+      - name: cita
+        label: Testimonio (extracto literal; sin comillas)
+        type: object
+        fields:
+          - { name: texto, label: Cita (un párrafo por elemento), type: text, list: true, required: true }
+          - { name: autoria, label: Autoría, type: string, required: true }
+      - name: cta
+        label: Franja final (titular en verde; texto y botón debajo)
+        type: object
+        fields:
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: texto, label: Texto, type: text, required: true }
+          - name: boton
+            label: Botón
+            type: object
+            fields:
+              - { name: texto, label: Texto, type: string, required: true }
+              - { name: ruta, label: "Ruta (/…/, #ancla o https://…)", type: string, required: true }
+
+  - name: contacto
+    label: Contacto
+    type: file
+    path: src/content/paginas/contacto.md
+    format: yaml-frontmatter
+    # Los textos admiten {anos}, {bibliotecas}, {correo}, {diagnosticoDesde}, {permanenciaMeses}, {respuestaContacto},
+    # {plazoDiagnostico}, {plazoImplantacion}, {plazoImplantacionConMigracion}, **negrita** y [enlace](/ruta/).
+    fields:
+      - { name: titulo, label: Título para buscadores, type: string, required: true }
+      - { name: descripcion, label: Descripción para buscadores, type: text, required: true }
+      - { name: etiqueta, label: Etiqueta sobre el titular, type: string }
+      - { name: h1, label: Titular, type: string, required: true }
+      - { name: entradilla, label: Entradilla (párrafos), type: text, list: true, required: true }
+      - name: formulario
+        label: Formulario
+        type: object
+        fields:
+          - { name: aceptacion, label: "Casilla de privacidad (entre [corchetes], el enlace)", type: string, required: true }
+          - { name: privacidad, label: "Texto legal bajo el botón (entre [corchetes], el enlace)", type: string, required: true }
+          - { name: boton, label: Texto del botón, type: string, required: true }
+      - { name: otros, label: Otros datos (correo, titular), type: text, list: true, required: true }
+
+  - name: legal
+    label: Páginas legales
+    type: collection
+    path: src/content/legal
+    format: yaml-frontmatter
+    # El texto admite {razonSocial}, {cif}, {domicilio}, {correo}, {correoTitular}, {url}… (datos de la web)
+    fields:
+      - { name: titulo, label: Título para buscadores, type: string, required: true }
+      - { name: descripcion, label: Descripción para buscadores, type: text, required: true }
+      - { name: h1, label: Titular, type: string, required: true }
+      - { name: actualizado, label: Última actualización, type: date, required: true }
+      - name: body
+        label: Texto
+        type: rich-text
+        options:
+          format: markdown
+
+  - name: sitio
+    label: Datos de la web (precios, plazos, correos…)
+    type: file
+    path: src/data/sitio.json
+    format: json
+    fields:
+      - { name: nombre, label: Nombre, type: string, required: true }
+      - { name: url, label: URL de producción, type: string, required: true }
+      - { name: descripcion, label: Descripción por defecto (50-160 caracteres), type: text, required: true }
+      - { name: correo, label: Correo de contacto, type: string, required: true }
+      - name: titular
+        label: Titular (aviso legal)
+        type: object
+        fields:
+          - { name: razonSocial, label: Razón social, type: string, required: true }
+          - { name: nombreComercial, label: Nombre comercial, type: string, required: true }
+          - { name: cif, label: CIF, type: string, required: true }
+          - { name: domicilio, label: Domicilio (solo aviso legal), type: string, required: true }
+          - { name: correo, label: Correo del titular, type: string, required: true }
+          - { name: web, label: Web del titular, type: string, required: true }
+      - name: precios
+        label: Precios (sin IVA)
+        type: object
+        fields:
+          - { name: diagnosticoDesde, label: Diagnóstico desde (€), type: number, required: true }
+      - name: plazos
+        label: Plazos
+        type: object
+        fields:
+          - name: diagnostico
+            label: Diagnóstico (informe y propuesta)
+            type: object
+            fields:
+              - { name: desde, label: Desde, type: number, required: true }
+              - { name: hasta, label: Hasta, type: number, required: true }
+              - name: unidad
+                label: Unidad
+                type: select
+                required: true
+                options:
+                  values: [días laborables, semanas, meses]
+          - name: implantacion
+            label: Implantación
+            type: object
+            fields:
+              - { name: desde, label: Desde, type: number, required: true }
+              - { name: hasta, label: Hasta, type: number, required: true }
+              - name: unidad
+                label: Unidad
+                type: select
+                required: true
+                options:
+                  values: [días laborables, semanas, meses]
+          - name: implantacionConMigracion
+            label: Implantación con migración
+            type: object
+            fields:
+              - { name: desde, label: Desde, type: number, required: true }
+              - { name: hasta, label: Hasta, type: number, required: true }
+              - name: unidad
+                label: Unidad
+                type: select
+                required: true
+                options:
+                  values: [días laborables, semanas, meses]
+          - name: respuestaContacto
+            label: Respuesta al formulario
+            type: object
+            fields:
+              - { name: desde, label: Desde, type: number, required: true }
+              - { name: hasta, label: Hasta, type: number, required: true }
+              - name: unidad
+                label: Unidad
+                type: select
+                required: true
+                options:
+                  values: [días laborables, semanas, meses]
+      - { name: permanenciaMeses, label: Permanencia mínima del plan sin coste inicial (meses), type: number, required: true }
+      - name: cifras
+        label: Cifras de confianza
+        type: object
+        fields:
+          - { name: anos, label: Años de experiencia, type: number, required: true }
+          - { name: bibliotecas, label: Bibliotecas, type: number, required: true }
+      - name: menu
+        label: Menú principal
+        type: object
+        list: true
+        fields:
+          - { name: texto, label: Texto, type: string, required: true }
+          - { name: ruta, label: "Ruta (/…/ o https://…)", type: string, required: true }
+      - name: botonMenu
+        label: Botón del menú
+        type: object
+        fields:
+          - { name: texto, label: Texto, type: string, required: true }
+          - { name: ruta, label: "Ruta (/…/ o https://…)", type: string, required: true }
+      - name: quePasaDespues
+        label: Bloque negro «Qué pasa después» (portada y diagnóstico)
+        type: object
+        fields:
+          - { name: titular, label: Titular, type: string, required: true }
+          - { name: pasos, label: "Pasos (admiten **negrita** y {respuestaContacto})", type: text, list: true, required: true }
+      - name: legal
+        label: Enlaces legales del pie
+        type: object
+        list: true
+        fields:
+          - { name: texto, label: Texto, type: string, required: true }
+          - { name: ruta, label: "Ruta (/…/ o https://…)", type: string, required: true }

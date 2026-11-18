@@ -1,0 +1,9 @@
+---
+// Rellena las marcas de rellenar() ({razonSocial}, {cif}…) en el HTML de un Markdown ya convertido.
+// Uso: <Rellenar><Content /></Rellenar>. Una marca desconocida rompe el build.
+import { rellenar } from '../data/sitio';
+
+const html = rellenar(await Astro.slots.render('default'));
+---
+
+<Fragment set:html={html} />

@@ -1,0 +1,87 @@
+/* Sistema visual común a entretecas.com y thekes.es (BRIEF §4). Mismo archivo en los dos repos:
+   si cambia un valor, cambiarlo en los dos. El color de marca de cada web se fija en global.css. */
+:root {
+  /* Color */
+  --color-tinta: #1a1f26;
+  --color-papel: #f7f8f6;
+  --color-blanco: #ffffff;
+  --color-linea: #dde2e0;
+  --color-texto-2: #3a403f;
+  --color-texto-3: #585f5d;
+
+  /* Bandas oscuras (fondo tinta) y sus textos: medidos sobre #242A33, el más claro de los dos fondos */
+  --color-oscuro-2: #242a33; /* tarjetas sobre banda tinta */
+  --color-texto-claro: #e3e7e5; /* 11,6:1 */
+  --color-texto-claro-2: #c2c8c6; /* 8,5:1 */
+
+  /* Borde de campos de formulario: 3,8:1 sobre blanco y 3,5:1 sobre papel (los controles piden 3:1) */
+  --color-borde-campo: #7e8583;
+  /* Errores de formulario (borde y mensaje): 5,7:1 sobre blanco y 5,4:1 sobre papel */
+  --color-error: #b3401c;
+
+  /* Caja vacía de la animación de la portada (MesaTaller.astro), antes de teñirse de color de marca */
+  --color-vacio: #c4cbd1;
+
+  --color-entretecas: #2e8a6c;
+  --color-thekes: #23395b;
+  --color-alimentoweb: #d4552b;
+
+  /* Tipografía: una sola familia, Literata variable (400, 500, 700) */
+  --fuente: 'Literata', 'Literata Reserva', Georgia, 'Times New Roman', serif;
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-negrita: 700;
+
+  --texto-h1: clamp(2.625rem, 1.6rem + 4.2vw, 4.75rem); /* 42 → 76 px */
+  --texto-h2: clamp(1.75rem, 1.35rem + 1.7vw, 2.5rem); /* 28 → 40 px */
+  --texto-h3: clamp(1.1875rem, 1.1rem + 0.4vw, 1.5rem); /* 19 → 24 px */
+  --texto-entradilla: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem); /* 18 → 21 px */
+  --texto-base: 1.0625rem; /* 17 px */
+  --texto-boton: 1.1875rem; /* 19 px en negrita: texto grande, basta 3:1 sobre color de marca */
+  --texto-pequeno: 0.875rem; /* 14 px */
+  --texto-minimo: 0.8125rem; /* 13 px */
+
+  --interletraje-h1: -0.035em;
+  --interletraje-h2: -0.02em;
+  --interletraje-logo: -0.03em;
+  --interletraje-etiqueta: 0.14em;
+
+  --interlineado-titular: 1.05;
+  --interlineado-texto: 1.6;
+
+  /* Espaciado y rejilla */
+  --ancho-max: 1200px;
+  --margen-lateral: 24px;
+  --espacio-1: 0.5rem;
+  --espacio-2: 1rem;
+  --espacio-3: 1.5rem;
+  --espacio-4: 2.25rem;
+  --espacio-5: clamp(2.5rem, 1.8rem + 3vw, 3.5rem);
+  --espacio-seccion: clamp(3.5rem, 2.2rem + 5.5vw, 6rem); /* 56 → 96 px */
+
+  /* Filete de acento (Filete.astro / .filete): el único acento de color de cada tarjeta o bloque */
+  --filete-ancho: 56px;
+  --filete-alto: 4px;
+
+  /* Formas */
+  --radio-boton: 4px;
+  --radio-tarjeta: 6px;
+  --radio-pastilla: 10px;
+  --borde: 1px solid var(--color-linea);
+
+  /* Accesibilidad */
+  --objetivo-tactil: 44px;
+  /* Alto visible de la cabecera fija (ya compacta): margen de las anclas para que no queden tapadas */
+  --alto-cabecera: 76px;
+
+  /* Enlaces: texto en tinta, subrayado en color de marca (gráfico: basta 3:1) */
+  --subrayado: 2px;
+  --subrayado-hover: 3px;
+  --subrayado-separacion: 3px;
+
+  /* Foco: contorno de 2 px en color de marca, separado 2 px, en todo lo interactivo.
+     --color-marca lo define global.css de cada web. */
+  --foco-color: var(--color-marca);
+  --foco: 2px solid var(--foco-color);
+  --foco-separacion: 2px;
+}

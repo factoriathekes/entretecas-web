@@ -1,0 +1,74 @@
+---
+// Tarjeta de plan gestionado, para bandas tinta. El plan destacado lleva el color de marca solo en la
+// franja superior, con el nombre en 24 px negrita (texto grande); el resto, sobre oscuro como los demás.
+interface Props {
+  nombre: string;
+  lema: string;
+  puntos: string[];
+  destacado?: boolean;
+}
+
+const { nombre, lema, puntos, destacado = false } = Astro.props;
+---
+
+<article class:list={['tarjeta-plan', 'tarjeta', { 'tarjeta-plan--destacado': destacado }]}>
+  <h3 class="tarjeta-plan__nombre">{nombre}</h3>
+  <div class="tarjeta-plan__cuerpo">
+    <p class="tarjeta-plan__lema">{lema}</p>
+    <ul class="tarjeta-plan__puntos lista-marca">
+      {puntos.map((punto) => <li>{punto}</li>)}
+    </ul>
+  </div>
+</article>
+
+<style>
+  .tarjeta-plan {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--color-oscuro-2);
+    color: var(--color-papel);
+  }
+
+  .tarjeta-plan--destacado {
+    box-shadow: inset 0 0 0 2px var(--color-marca);
+  }
+
+  .tarjeta-plan__nombre {
+    padding: 36px 36px 0;
+    font-size: 1.5rem; /* 24 px: no bajar, en el destacado va sobre color de marca */
+    letter-spacing: -0.01em;
+  }
+
+  .tarjeta-plan--destacado .tarjeta-plan__nombre {
+    padding-bottom: 20px;
+    background: var(--color-marca);
+  }
+
+  .tarjeta-plan__cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 36px 36px;
+  }
+
+  .tarjeta-plan--destacado .tarjeta-plan__cuerpo {
+    padding-top: 24px;
+  }
+
+  .tarjeta-plan__lema {
+    font-size: var(--texto-base);
+    color: var(--color-texto-claro);
+  }
+
+  .tarjeta-plan__puntos {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding-left: 20px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-texto-claro-2);
+  }
+</style>

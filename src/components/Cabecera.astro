@@ -1,0 +1,272 @@
+---
+// Cabecera: logo (SVG del paquete, sin recomponer) y menú principal.
+// En móvil el menú se pliega tras un botón; sin JavaScript se ve siempre desplegado.
+import Logo from '../assets/logos/entretecas-reducido-color.svg';
+import { sitio } from '../data/sitio';
+
+const rutaActual = Astro.url.pathname;
+// «page» en la página del enlace; «true» en las páginas de su apartado (Servicios → /servicios/…)
+const actual = (ruta: string) => {
+  if (rutaActual === ruta) return 'page';
+  if (ruta === '/#servicios' && rutaActual.startsWith('/servicios/')) return 'true';
+  return undefined;
+};
+---
+
+<header class="cabecera">
+  <div class="contenedor cabecera__fila">
+    <a class="cabecera__logo" href="/" aria-label={`${sitio.nombre}, portada`}>
+      <Logo aria-hidden="true" />
+    </a>
+
+    <button class="cabecera__abrir" type="button" aria-expanded="false" aria-controls="menu-principal">
+      <span class="cabecera__icono" aria-hidden="true"></span>
+      Menú
+    </button>
+
+    <nav id="menu-principal" class="cabecera__menu" aria-label="Principal">
+      <ul>
+        {
+          sitio.menu.map((enlace) => (
+            <li>
+              <a href={enlace.ruta} aria-current={actual(enlace.ruta)}>
+                {enlace.texto}
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a class="boton" href={sitio.botonMenu.ruta} aria-current={rutaActual === sitio.botonMenu.ruta ? 'page' : undefined}>
+            {sitio.botonMenu.texto}
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  /* Cabecera fija. En móvil, solo con JavaScript (sin él, el menú va desplegado y taparía media pantalla).
+     Al desplazarse se «compacta» sin cambiar su altura en el flujo (sin saltos de maquetación): sube 10 px
+     (top negativo, se pierde margen superior), el contenido baja 5 px para quedar centrado y el logo se reduce. */
+  .cabecera {
+    background: var(--color-papel);
+    border-bottom: var(--borde);
+    z-index: 100;
+    transition:
+      top 0.2s ease-out,
+      box-shadow 0.2s ease-out;
+  }
+
+  :global(.js) .cabecera {
+    position: sticky;
+    top: 0;
+  }
+
+  @media (min-width: 961px) {
+    .cabecera {
+      position: sticky;
+      top: 0;
+    }
+  }
+
+  .cabecera.cabecera--compacta {
+    top: -10px;
+    box-shadow: 0 1px 10px rgb(26 31 38 / 0.08);
+  }
+
+  .cabecera__fila {
+    transition: transform 0.2s ease-out;
+  }
+
+  .cabecera--compacta .cabecera__fila {
+    transform: translateY(5px);
+  }
+
+  .cabecera__logo svg {
+    transform-origin: left center;
+    transition: transform 0.2s ease-out;
+  }
+
+  .cabecera--compacta .cabecera__logo svg {
+    transform: scale(0.85);
+  }
+
+  .cabecera__fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espacio-2);
+    padding-block: 20px;
+  }
+
+  .cabecera__logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--objetivo-tactil);
+    text-decoration: none;
+  }
+
+  .cabecera__logo svg {
+    height: 40px;
+    width: auto;
+  }
+
+  /* Móvil estrecho: logo algo menor para que «Menú» quepa a su lado */
+  @media (max-width: 480px) {
+    .cabecera__logo svg {
+      height: 30px;
+    }
+  }
+
+  .cabecera__menu ul {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--espacio-1) 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-weight: var(--peso-medio);
+  }
+
+  /* Menú: elementos en tinta, sin subrayado; la página actual, subrayada en color de marca.
+     Al pasar el ratón, el mismo subrayado. */
+  .cabecera__menu a:not(.boton) {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--objetivo-tactil);
+    color: var(--color-tinta);
+    text-decoration-line: none;
+  }
+
+  .cabecera__menu a:not(.boton):hover,
+  .cabecera__menu a[aria-current]:not(.boton) {
+    text-decoration-line: underline;
+    text-decoration-thickness: var(--subrayado);
+  }
+
+  .cabecera__menu a[aria-current]:not(.boton) {
+    text-decoration-thickness: var(--subrayado-hover);
+  }
+
+  .cabecera__abrir {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    min-height: var(--objetivo-tactil);
+    padding: 0 14px;
+    border: var(--borde);
+    border-radius: var(--radio-boton);
+    background: var(--color-blanco);
+    color: var(--color-tinta);
+    font: inherit;
+    font-weight: var(--peso-medio);
+    cursor: pointer;
+  }
+
+  .cabecera__icono,
+  .cabecera__icono::before,
+  .cabecera__icono::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: currentColor;
+  }
+
+  .cabecera__icono {
+    position: relative;
+  }
+
+  .cabecera__icono::before,
+  .cabecera__icono::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+
+  .cabecera__icono::before {
+    top: -6px;
+  }
+
+  .cabecera__icono::after {
+    top: 6px;
+  }
+
+  /* Móvil, solo con JavaScript: botón «Menú» y lista vertical desplegable */
+  @media (max-width: 960px) {
+    :global(.js) .cabecera__abrir {
+      display: inline-flex;
+    }
+
+    :global(.js) .cabecera__menu {
+      display: none;
+      flex-basis: 100%;
+    }
+
+    :global(.js) .cabecera__menu.abierto {
+      display: block;
+    }
+
+    :global(.js) .cabecera__menu ul {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      padding-block: var(--espacio-1);
+    }
+
+    :global(.js) .cabecera__menu li + li {
+      border-top: var(--borde);
+    }
+
+    :global(.js) .cabecera__menu .boton {
+      margin-top: var(--espacio-2);
+      justify-content: center;
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  // Cabecera compacta al desplazarse (clase, sin tocar el flujo); un solo listener pasivo, a un cuadro por vez
+  const cabecera = document.querySelector<HTMLElement>('.cabecera');
+  if (cabecera) {
+    let pendiente = false;
+    const marcar = () => {
+      pendiente = false;
+      cabecera.classList.toggle('cabecera--compacta', window.scrollY > 8);
+    };
+    addEventListener(
+      'scroll',
+      () => {
+        if (!pendiente) {
+          pendiente = true;
+          requestAnimationFrame(marcar);
+        }
+      },
+      { passive: true },
+    );
+    marcar();
+  }
+
+  const boton = document.querySelector<HTMLButtonElement>('.cabecera__abrir');
+  const menu = document.getElementById('menu-principal');
+
+  if (boton && menu) {
+    const cambiar = (abrir: boolean) => {
+      boton.setAttribute('aria-expanded', String(abrir));
+      menu.classList.toggle('abierto', abrir);
+    };
+
+    boton.addEventListener('click', () => cambiar(boton.getAttribute('aria-expanded') !== 'true'));
+
+    // Escape cierra el menú y devuelve el foco al botón
+    document.addEventListener('keydown', (evento) => {
+      if (evento.key === 'Escape' && boton.getAttribute('aria-expanded') === 'true') {
+        cambiar(false);
+        boton.focus();
+      }
+    });
+  }
+</script>
