@@ -65,4 +65,7 @@ if ($codigo >= 200 && $codigo < 300) {
 $datos = json_decode((string) $respuesta, true);
 $codigoBrevo = is_array($datos) && isset($datos['code']) && is_string($datos['code']) ? $datos['code'] : '';
 $codigoBrevo = substr(preg_replace('/[^A-Za-z0-9_]/', '', $codigoBrevo), 0, 40);
-fallo('Brevo respondió HTTP ' . $codigo . ($codigoBrevo !== '' ? ' (' . $codigoBrevo . ')' : ''));
+// «message» de Brevo (no lleva la clave): sin saltos de línea y recortado a 300 caracteres
+$mensaje = is_array($datos) && isset($datos['message']) && is_string($datos['message']) ? $datos['message'] : '';
+$mensaje = mb_substr(trim((string) preg_replace('/\s+/u', ' ', $mensaje)), 0, 300);
+fallo('Brevo respondió HTTP ' . $codigo . ($codigoBrevo !== '' ? ' (' . $codigoBrevo . ')' : '') . ($mensaje !== '' ? ' — ' . $mensaje : ''));

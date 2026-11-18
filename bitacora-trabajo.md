@@ -5,6 +5,21 @@ Una entrada cuando se toca producción (DNS, hosting, publicación) o hay un inc
 
 ---
 
+## 2026-11-18 (6) — Registro de errores de Brevo con su «message»
+
+- **Qué se tocó**: solo el registro de errores de `public/api/enviar.php` y `public/api/salud.php`: cuando Brevo responde con error, se guarda también su campo `message` (sin saltos de línea, 300 caracteres como máximo). En `enviar.php`, además, se tapan el correo y el nombre del visitante si Brevo los cita. Nunca la clave, el secreto ni datos del visitante. Local; sin commit; no publicado.
+- **Comprobado** (PHP 7.4, clave falsa contra Brevo real): ambos registran `HTTP 401 unauthorized — Key not found`; el log no contiene la clave, el secreto ni el correo del visitante.
+
+---
+
+## 2026-11-18 (5) — Primera publicación en staging: comprobaciones
+
+- **Qué se hizo**: Rai publicó staging con el workflow; yo solo comprobé (sin tocar el servidor). Sin commit.
+- **Resultado**: 15 páginas 200, 404 propia; CSP y cabeceras de seguridad, `X-Robots-Tag: noindex, nofollow` y `robots.txt` (`Disallow: /`) presentes; ninguna redirección antigua salta; `api/salud.php` y `api/listas.php` → 403 desde la web; consola sin errores; Lighthouse portada: móvil 100/100/100 (SEO 66) y escritorio 100/100/100 (SEO 66) — el SEO baja solo por «bloqueada a buscadores», esperado en staging.
+- **Pendiente**: el envío real del formulario de contacto devolvió el aviso genérico de fallo del servidor (el token se obtiene bien). Causa por determinar en el log de errores de PHP de la cuenta (líneas `[formulario-entretecas]`). Diagnóstico no probado.
+
+---
+
 ## 2026-11-18 (4) — Preparación de la primera publicación en staging
 
 - **Qué se tocó**: `public/api/enviar.php` (rutas de configuración y contadores), `public/api/salud.php` (nuevo), `public/api/.htaccess`, `.github/workflows/despliegue.yml` (reescrito), `deploy/preparar.sh`, `deploy/htaccess-staging`, `deploy/htaccess-staging-acceso` (nuevo), `deploy/secretos-github.example`, plantilla de configuración y `CLAUDE.md`. Local; **no se ha publicado nada ni en staging ni en producción**; sin backup (no aplica) ni commit.

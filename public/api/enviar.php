@@ -493,7 +493,16 @@ function enviar_aviso(array $config, string $asunto, string $texto, string $corr
     // Solo el código HTTP y el «code» de Brevo (p. ej. unauthorized, invalid_parameter): ni cuerpo ni cabeceras
     $respuesta = is_string($cuerpo) ? json_decode($cuerpo, true) : null;
     $motivo = is_array($respuesta) && isset($respuesta['code']) && is_string($respuesta['code']) ? $respuesta['code'] : '';
-    registrar('Brevo no ha aceptado el aviso: HTTP ' . $codigo . ($motivo !== '' ? ' ' . substr($motivo, 0, 60) : '') . ($fallo !== '' ? ' (cURL: ' . substr($fallo, 0, 100) . ')' : ''));
+    // «message» de Brevo (no lleva la clave): sin saltos de línea y recortado a 300 caracteres. Por si acaso cita algún
+    // dato del visitante, se tapan su correo y su nombre antes de guardarlo.
+    $texto = is_array($respuesta) && isset($respuesta['message']) && is_string($respuesta['message']) ? $respuesta['message'] : '';
+    foreach ([$carga['replyTo']['email'] ?? '', $carga['replyTo']['name'] ?? ''] as $dato) {
+        if (is_string($dato) && $dato !== '') {
+            $texto = str_ireplace($dato, '[dato]', $texto);
+        }
+    }
+    $texto = mb_substr(trim((string) preg_replace('/\s+/u', ' ', $texto)), 0, 300);
+    registrar('Brevo no ha aceptado el aviso: HTTP ' . $codigo . ($motivo !== '' ? ' ' . substr($motivo, 0, 60) : '') . ($texto !== '' ? ' — ' . $texto : '') . ($fallo !== '' ? ' (cURL: ' . substr($fallo, 0, 100) . ')' : ''));
     return false;
 }
 
